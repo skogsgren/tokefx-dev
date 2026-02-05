@@ -1,0 +1,36 @@
+FOLDER STRUCTURE
+I think structuring it as a Python package from the get-go is a good idea.
+
+tokefx/
+    tokefx/
+        perturbations/
+            noncanon.py
+            typo.py
+            __init__.py
+        benchmarks/
+            belebele.py
+            mmlu.py
+            __init__.py
+        evaluate/
+            tokenalignment.py
+            __init__.py
+        interpretability/
+            <scoring_method>.py
+            __init__.py
+        data.py
+        main.py
+    scripts/
+        experiments.py
+        config.toml
+    pyproject.toml
+    README.md
+
+LINKS
+
+Code for Kaplan paper on inner lexicon of LLMs:
+    https://guykap12.github.io/FromTokens2Words/
+    https://github.com/schwartz-lab-NLP/Tokens2Words
+
+
+Code for token align paper. Should be able to copy the eflomal parts:
+    https://github.com/KathyHaem/token-alignability
