@@ -1,0 +1,120 @@
+
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    every node/.style={font=\small},
+    box/.style={
+        rectangle,
+        rounded corners,
+        draw=black,
+        thick,
+        align=center,
+        minimum width=3.8cm,
+        minimum height=1.1cm,
+        fill=gray!10
+    },
+    benchbox/.style={
+        rectangle,
+        rounded corners,
+        draw=black,
+        thick,
+        align=center,
+        minimum width=3.8cm,
+        minimum height=1.0cm,
+        fill=blue!15
+    },
+    layerbox/.style={
+        rectangle,
+        rounded corners,
+        draw=black,
+        thick,
+        align=center,
+        minimum width=3.8cm,
+        minimum height=1.0cm,
+        fill=yellow!15
+    },
+    alignbox/.style={
+        rectangle,
+        rounded corners,
+        draw=black,
+        thick,
+        align=center,
+        minimum width=3.8cm,
+        minimum height=1.0cm,
+        fill=green!15
+    },
+    pertbox/.style={
+        rectangle,
+        rounded corners,
+        draw=black,
+        thick,
+        align=center,
+        minimum width=3.8cm,
+        minimum height=1.0cm,
+        fill=red!15
+    },
+    arrow/.style={->, thick},
+    doublearrow/.style={<->, thick}
+]
+
+% Top benchmark (baseline)
+\node[benchbox] (bench0) {%
+\textbf{Baseline Benchmarks} \\
+NLU benchmark for \texttt{TokSuite} models
+};
+
+% RQ blocks
+\node[box, below right=of bench0] (rq1) {%
+\textbf{RQ1: Representation Analysis}\\
+W/o perturbations
+};
+
+\node[box, below left=of bench0] (rq2) {%
+\textbf{RQ2: Perturbation Analysis}
+};
+
+\node[pertbox, below left=of rq2] (typo) {%
+\textbf{Surface-level Perturbations}
+};
+
+\node[pertbox, below=of rq2] (noncanon) {%
+\textbf{Non-canon Tokenization}
+};
+
+\node[benchbox, below=of typo] (bench2typo) {%
+\textbf{Benchmark Re-evaluation}\\
+Performance deltas
+};
+
+\node[benchbox, below=of noncanon] (bench2noncanon) {%
+\textbf{Benchmark Re-evaluation}\\
+Performance deltas
+};
+
+\node[layerbox, below=of bench0] (tokenscores) {%
+\textbf{Inter-layer token scores}
+};
+
+\node[box, below right=of bench2noncanon] (rq3) {%
+\textbf{RQ3: Cross-lingual Alignment}
+};
+
+\node[alignbox, below=of rq3] (alg) {%
+\textbf{Token Overlap / Alignment Scores (EN-X)}
+};
+
+% Arrows
+\draw[arrow] (bench0) -- (rq1);
+\draw[arrow] (bench0) -- (rq2);
+\draw[doublearrow] (rq1) -- (tokenscores);
+\draw[doublearrow] (typo) -- (tokenscores);
+\draw[doublearrow] (noncanon) -- (tokenscores);
+\draw[arrow] (rq1) -- (rq3);
+\draw[arrow] (rq2) -- (typo);
+\draw[arrow] (rq2) -- (noncanon);
+\draw[arrow] (typo) -- (bench2typo);
+\draw[arrow] (noncanon) -- (bench2noncanon);
+\draw[arrow] (bench2typo) -- (rq3);
+\draw[arrow] (bench2noncanon) -- (rq3);
+\draw[arrow] (rq3) -- (alg);
+
+\end{tikzpicture}

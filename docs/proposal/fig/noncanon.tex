@@ -1,0 +1,43 @@
+\begin{figure}[h]
+\centering
+
+\begin{subfigure}[t]{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{bow} & \textbf{ling} \\
+\hline
+8176 & 1359 \\
+\hline
+\end{tabular}
+\caption{Canonical tokenization}
+\end{subfigure}
+
+\begin{subfigure}[t]{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{b} & \textbf{ow} & \textbf{ling} \\
+\hline
+65 & 322 & 1359 \\
+\hline
+\end{tabular}
+\caption{Non-canonical tokenization}
+\end{subfigure}
+
+\begin{subfigure}[t]{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{bow} & \textbf{king} \\
+\hline
+8176 & 3364 \\
+\hline
+\end{tabular}
+\caption{Surface level perturbation}
+\end{subfigure}
+
+
+\caption{Demonstrating canonical vs.\ a possible non-canonical tokenization and perturbation example for the word `bowling' using GPT2-tokenizer.}
+\label{fig:noncanon}
+\end{figure}

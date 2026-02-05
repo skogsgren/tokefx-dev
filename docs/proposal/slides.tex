@@ -1,0 +1,141 @@
+\documentclass{beamer}
+    \usefonttheme{serif}
+\usepackage{subcaption}
+\usepackage[backend=biber,sortcites,maxcitenames=1,maxbibnames=2]{biblatex}
+    \addbibresource{./references.bib}
+\usepackage{adjustbox}
+\usepackage{tikz}
+\usetikzlibrary{
+  positioning,
+  arrows.meta,
+  shapes.geometric
+}
+
+\title[Tokenization Effects]{Tokenization Effects in Multilingual LLMs}
+\author{Gustaf Gren}
+\date{Project Proposal}
+
+\begin{document}
+
+% -----------------------
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% -----------------------
+\begin{frame}{Aim}
+
+This thesis aims to shed light on how tokenization choices influence
+representations, robustness, and cross-lingual performance in multilingual
+models using \texttt{TokSuite} \parencite{altintas2025}, LLMs trained
+identically except for the choice in tokenizer.
+
+\end{frame}
+
+% -----------------------
+\begin{frame}{Tokenization \& Robustness}
+\begin{itemize}
+  \item LLMs uses subword tokenization (e.g. BPE)
+  \item Same text can have multiple valid tokenizations
+  \item LLMs are trained on only canonical tokenization, yet LLMs remain surprisingly robust.
+\end{itemize}
+
+{
+\footnotesize
+\input{fig/noncanon}
+}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Mechanistic Interpretability}
+
+\textit{How do we uncover the ``black box'' in LLMs?}
+
+\end{frame}
+
+% -----------------------
+\begin{frame}{Mechanistic Interpretability \& Multilinguality}
+Multilingual models show layered language processing, with language-specific processing occurring in early-to-middle layers, and late layers.
+
+\includegraphics[width=0.8 \linewidth]{img/harasse2025_img.png} \\
+``language-agnosticity'' / layer \parencite{harrasse2025}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Mechanistic Interpretability \& Tokens = True?}
+
+Similarly, \textcite{kaplan2025} suggests early-to-middle layers
+\textit{\textbf{detokenize}} into a model-internal vocabulary.
+
+\end{frame}
+
+% -----------------------
+\begin{frame}{Detokenization}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics[width=0.9\linewidth]{img/kaplan_word_retreival.jpeg}
+
+\column{0.5\textwidth}
+\includegraphics[width=0.9\linewidth]{img/kaplan_attention.jpeg}
+\end{columns}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Detokenization gaps}
+
+\textcite{kaplan2025} limit their analysis to English and don't perform comparisons between tokenizers.
+
+\end{frame}
+
+\begin{frame}{Research Questions}
+\begin{itemize}
+\item[\textbf{RQ1}] Do multilingual models exhibit detokenization patterns
+across languages and tokenizers? How do patterns differ between more
+monolingual (e.g.  GPT-2) and more multilingual tokenizers (e.g. BLOOM)?
+\end{itemize}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Tokenization alignment/overlap}
+\begin{itemize}
+  \item Tokenization compression ratios affects performance and transfer,
+  generally more compression = better performance \parencite{ahia2023}.
+  \item However, more overlapping/aligned vocabularies leads to increased
+  performance \parencite{kallini2025, limisiewicz2023}.
+  \item Cross-lingual tokenization effects are poorly understood.
+\end{itemize}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Research Questions}
+\begin{itemize}
+
+\item[\textbf{RQ1}] Do multilingual models exhibit detokenization patterns
+across languages and tokenizers? How do patterns differ between more
+monolingual (e.g.  GPT-2) and more multilingual tokenizers (e.g. BLOOM)?
+
+\item[\textbf{RQ2}] Do majority, minority, and out-of-training languages show
+different processing patterns under tokenization perturbations?
+
+\item[\textbf{RQ3}] Does higher token alignment scores lead to an increase in
+robustness and performance on NLU benchmarks across tokenizers?
+
+\end{itemize}
+\end{frame}
+
+% -----------------------
+\begin{frame}{Methodology}
+\begin{itemize}
+\item  \texttt{TokSuite} models \parencite{altintas2025}, trained identically except for tokenizer.
+\item For each selected tokenizer and language:
+\end{itemize}
+\begin{adjustbox}{max width=\textwidth}
+\input{fig/methodology_tikz}
+\end{adjustbox}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+\printbibliography
+\end{frame}
+
+\end{document}

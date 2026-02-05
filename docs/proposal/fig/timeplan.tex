@@ -1,0 +1,30 @@
+\begin{adjustbox}{max width=\textwidth}
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    time slot format=isodate,
+    x unit=0.12cm,
+    y unit title=0.6cm,
+    y unit chart=0.5cm,
+    bar height=0.55,
+    group height=0.4,
+    bar/.append style={fill=blue!50},
+]{2025-02-01}{2025-04-30}
+    \gantttitlecalendar{month} \\
+
+    \ganttbar{\textbf{Data selection}}{2025-02-01}{2025-02-10} \\
+    \ganttbar{\textbf{NLU benchmark selection}}{2025-02-01}{2025-02-10} \\
+    \ganttbar{\textbf{Tokenizer selection}}{2025-02-01}{2025-02-14} \\
+    \ganttbar{\textbf{Inter-layer method selection}}{2025-02-01}{2025-02-14} \\
+    \ganttbar{\textbf{Token perturbation selection}}{2025-02-01}{2025-02-14} \\
+    \ganttbar{\textbf{Model benchmark eval coding}}{2025-02-05}{2025-02-14} \\
+    \ganttbar{\textbf{Model benchmark eval runs}}{2025-02-15}{2025-03-01} \\
+    \ganttbar{\textbf{Robustness experiment design}}{2025-02-15}{2025-03-01} \\
+    \ganttbar{\textbf{Inter-layer experiment design}}{2025-02-15}{2025-03-01} \\
+    \ganttbar{\textbf{Experiment logic coding}}{2025-02-15}{2025-03-21} \\
+    \ganttbar{\textbf{Experiment runs}}{2025-03-22}{2025-03-31} \\
+    \ganttbar{\textbf{Error analysis/reruns}}{2025-04-01}{2025-04-15} \\
+    \ganttbar{\textbf{Analysis of experiment runs}}{2025-04-10}{2025-04-30} \\
+    \ganttbar{\textbf{Writing}}{2025-03-01}{2025-04-30}
+\end{ganttchart}
+\end{adjustbox}

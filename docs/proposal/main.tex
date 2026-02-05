@@ -1,0 +1,138 @@
+\documentclass[a4paper]{article}
+\usepackage[style=authoryear,sorting=nty,backend=biber,sortcites,maxcitenames=2,maxbibnames=99]{biblatex}
+    \addbibresource{./references.bib}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{pgfgantt}
+\usepackage{adjustbox}
+
+\newcommand{\thankstext}{
+    Done in collaboration at \href{https://ri.se}{\texttt{RISE}} under the supervision of \href{https://www.ri.se/sv/person/murathan-kurfali}{Murathan Kurfal\i{}} \\
+    Code will be released under a GPL 3.0 License
+}
+
+\title{Tokenization Effects in Multilingual LLMs}
+\author{Gustaf Gren\thanks{\thankstext} \\ \texttt{gustaf.gren@ling.su.se}}
+\date{Project Proposal}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Modern LLMs rely on subword tokenization methods such as BPE \parencite{bpe,bpe2}. These improve efficiency and mitigate out-of-vocabulary issues \parencite{mielke2021} but introduce non-uniqueness: the same text admits multiple tokenizations despite greedy decoding\footnote{See Appendix \ref{sec:marginalprob} for discussion of non-canonical and non-greedy tokenization.}. Although models are trained only on canonical forms, they remain robust to non-canonical tokenizations and character-level perturbations \parencite{zheng2025, liu2025}. See Figure \ref{fig:noncanon} for an example of each.
+
+\input{fig/noncanon.tex}
+
+\textit{Mechanistic interpretability} seeks to decompose the ``black box'' of LLMs \parencite{zhang2026}. In multilingual models, early and late layers appear language-specific, while middle layers encode language-agnostic representations \parencite{huang2025, tang2024, conneau2020, mousi2024, wendler2024, basirat2025}. \textcite{kaplan2025} extend this to tokenization, arguing that early-to-middle layers ``detokenize'' subwords into coherent internal representations, effectively forming a model-internal vocabulary.
+
+\textcite{kaplan2025} show this is most prominent in early-mid feed-forward networks ($\approx$ layer 5), which may function as a key-value dictionary for the inner lexicon, building on research showing similar key/value mappings for knowledge \parencite{meng2022, geva2022, geva2021}. Evidence from \textcite{jing2025}, who find morphological and syntactic sparse autoencoder features concentrated in early-to-middle layers, supports the claim that detokenization occurs early. \textcite{kaplan2025} further propose that earlier stages primarily aggregate information from preceding tokens to form concepts, demonstrated through attention scores over single- and multi-token words.
+
+Tokenization quality correlates with downstream performance: poor compression harms results,\footnote{Pre-tokenization also matters; see Appendix \ref{sec:pretokenization}.} particularly for low-resource languages \parencite{goldman2024, ahia2023}. However, greater token overlap\footnote{See Appendix \ref{sec:overlap}.} can facilitate cross-lingual transfer \parencite{kallini2025, hammerl2025, limisiewicz2023}, suggesting a non-obvious relationship between token-overlap and performance.
+
+\subsection{Motivation}
+
+\textcite{kaplan2025} demonstrated detokenization patterns through robustness analyses, but did not investigate these effects cross-linguistically, nor by using models which only differ by their tokenizers\footnote{See Appendix \ref{sec:relatedwork} for most closely related work.}.
+
+While the relationship between tokenization overlap/alignment has been explored \parencite{kallini2025, hammerl2025, limisiewicz2023}, the relationship between tokenization overlap/alignment and robustness as well as internal patterns remains underexplored.
+
+\subsection{Purpose}
+
+This thesis aims to shed light on how tokenization choices influence representations, robustness, and cross-lingual performance in multilingual models using \texttt{TokSuite} \parencite{altintas2025}, 1/7B models trained identically except for the choice in tokenizer.
+
+\begin{enumerate}[label=\textbf{RQ\arabic*}]
+
+\item\label{rq1} Do multilingual models exhibit detokenization patterns across languages and tokenizers? How do patterns differ between more monolingual (e.g.\ GPT-2) and more multilingual tokenizers (e.g.\ BLOOM)?
+
+\item\label{rq2} Do majority, minority, and out-of-training languages show different processing patterns under tokenization perturbations?
+
+\item\label{rq3} Does higher token alignment scores lead to an increase in robustness and performance on NLU benchmarks across tokenizers?
+
+\end{enumerate}
+
+\section{Data}
+
+Parallel datasets like \texttt{FLORES} \parencite{flores} or \texttt{UD-Treebanks PUD} \parencite{udtreebanks} will be used, since they minimize the risk of semantics affecting results. \texttt{TokSuite} was trained on English, Chinese, Turkish, Italian, and Farsi. Evaluation ought to include one out-of-domain language.
+
+\section{Methodology}
+
+Establish model benchmarks using either \texttt{BeleBele} \parencite{bandarkar2024}, \texttt{MGSM} \parencite{shi2022}, or \texttt{MMMLU} \parencite{hendrycks2021}, which are to be used across \ref{rq1}, \ref{rq2}, and \ref{rq3}
+
+\begin{enumerate}[label=\textbf{RQ\arabic*}]
+
+\item Calculate inter-layer token scores without perturbations across languages and tokenizers to identify detokenization patterns\footnote{See Appendix \ref{sec:internalmethods} for full list of alternatives}. Easiest starting point is replicating \textcite{kaplan2025}\footnote{Code's available: \url{https://guykap12.github.io/FromTokens2Words/}}.
+
+\item Generate perturbations and non-canonical tokenization for different tokenizers and languages at different levels of noise\footnote{See Appendix \ref{sec:pergen} for discussion on ways to do this}. Calculate inter-layer token scores. Recalculate benchmark for each level of noise. Get robustness scores using deltas between canonical Acc$_{\text{can}}$ and perturbed Acc$_{\text{per}}$:
+\[
+S = \frac{\text{Acc}_{\text{can}}  - \text{Acc}_{\text{per}}}{\text{Acc}_{\text{can}}}
+\]
+
+
+\item Calculate token alignment scores between English and target languages using \textcite{hammerl2025} or raw overlap \parencite{kallini2025}. Correlate with performance and robustness metrics.
+
+\end{enumerate}
+
+\section{Timeplan}
+
+\input{fig/timeplan.tex}
+
+\printbibliography
+
+\appendix
+
+\section{Pre-tokenization}\label{sec:pretokenization}
+
+Pre-tokenization is the normalization step before the actual merging process in sub-token compression methods. In most modern tokenization pipelines for LLMs, this involves splitting text into pre-tokens which limits what \textit{can} constitute a token, typically on whitespace and punctuation \parencite{schmidt2025}. \textcite{arnett2025, wegmann2025} show the unequal impact of the pre-tokenization decisions in cross-lingual scenarios, where the pre-tokenization can have a detrimental effect on non-Latin languages or languages heavily utilizing diacritics and non-English punctuation rules. \textcite{xu2026} studied the practical effects of the \textit{partial token problem}, when you end a prompt with a token that many tokens start with (like whitespace), which had adverse affects on performance.
+
+\textcite{liu2025b} introduced \texttt{SuperBPE} to mitigate the consequences of pre-tokenization rules, which utilizes BPE to first get sub-words, and then introduces ``super'' words which can work across whitespace (e.g.\ to capture idiomatic expressions like "kick the bucket"), which increased compression by $33\%$ and performance by $4\%$ over baselines. Although, given the context of this thesis, the pre-tokenization effects --- while impactful --- are hard to alleviate since full re-training of both tokenizer and model would have to be done to mitigate them. The \texttt{TokSuite} models use the pre-tokenization of their parent tokenizers, and they should reflect the biases of pre-tokenization. Given the purpose of this thesis is to study the \textit{effects} of tokenization this is an inherent limitation hard to get around.
+
+\section{Token Overlap vs. Alignment}\label{sec:overlap}
+
+While prior work shows that highly divergent vocabularies can harm performance, increased vocabulary overlap facilitates embedding spaces that better capture cross-lingual semantic relationships \parencite{kallini2025, limisiewicz2023}. However, measuring overlap via raw shared-token ratios runs the risk of being insufficient for non-Latin scripts, prompting \textcite{hammerl2025} to propose alignment-based metrics derived from statistical word aligners such as \texttt{eflomal} \parencite{ostling2016}. Relatedly, \textcite{liu2025c} find that Latin-script languages benefit more from token overlap in cross-lingual transfer and exhibit greater consistency in factual recall compared to non-Latin-script languages.
+
+\section{Related Work}\label{sec:relatedwork}
+
+Most similar work is the work being done on \textit{typoglycemia}, the ability to decipher what word is meant despite mispeld wrds. \textcite{hou2026} created a subtoken benchmark dataset with layer-wise internal analysis, but only for English. \textcite{sperduti2025} showed that LLMs' ability to interpret misspelled words depends on context and training data, relying more on distributional patterns than actual reasoning. \textcite{wang2025b} analyzed the models' internals using attention heads, though again focusing solely on English, with the purpose of comparing two points-of-view: do LLMs use word form or context when decoding typoglycemia? They conclude LLMs use the former, and in cases where perturbation happens, the model spends more time and at an earlier time in the layers, focusing on the word form. \textcite{yu2024} conclude that perturbation for characters, especially word-initial characters, are detrimental to performance --- which they find across different domains.
+
+\section{Methodologies For Analysing Internal Activation Patterns}\label{sec:internalmethods}
+
+Existing approaches how to analyze inter-layer representations across layers include:
+
+\begin{enumerate}
+
+\item \textbf{Vocabulary projection}: the logit lens technique, introduced by \textcite{nostalgebraist}, projects LLMs hidden states through the model's output matrix to see which tokens the model is already leaning toward before it officially predicts the next token.
+
+\item \textbf{Neuron-level Activation Analysis}: \textcite{tang2024} introduces Language Activation Probability Entropy (LAPE), a method to identify language-specific neurons within LLMs. A neuron is a parameterized nonlinear function that transforms representations within a high-dimensional space. LAPE measures the entropy of neuron activations across different languages, pinpointing neurons that are highly active for a particular language. \textcite{gurgurov2025} uses this to steer LLMs away from unwanted languages, and toward desired languages.
+
+\item \textbf{Intervention-based techniques}: \textcite{ghandeharioun2024} introduced \texttt{PatchScopes}, which patches in the output from certain layers using corrupted input trying to reconstruct the non-corrupted input. \textcite{dumas2025} introduces attention patching, which runs two forward passes, and injects one into the other at certain layers to identify how the output distribution changes to infer what was encoded in that activation. \textcite{korner2026} used attention patching to identify when language-agnostic concept spaces emerge during pre-training.
+
+\item \textbf{Attention head analysis}: \textcite{zhao2025} identifies certain attention heads responsible for capabilities like mathematical ability, and demonstrate using ablation. \textcite{wang2025b} identify attention heads responsible for reconstructing word form from typoglycemic contexts. These heads aren't present in non-typoglemic contexts.
+
+\item \textbf{Representational similarity measures} such as normalized mutual information (NMI) across parallel sentences. \textcite{basirat2025} used NMI to show language-agnosticity across layers.
+
+\end{enumerate}
+
+Sparse auto-encoders, while prominent in mechanistic interpretability research \parencite{shu2025, zhang2026}, are less well suited to this task, as they primarily focus on discovering monosemantic features rather than modeling interactions between tokens \parencite{templeton2024}. Given the lack of standardized methodology in mechanistic interpretability, the final choice of analysis techniques will be guided by their suitability for capturing token-level interactions across layers, as well as practical considerations such as computational cost and ease of use.
+
+\section{Marginal Probability Mass}\label{sec:marginalprob}
+
+While there are approaches to mitigate the greedy nature of tokenization, like making changes in the pre-training to also train on the marginal \parencite{sims2025}, or using non-greedy search all together \parencite{forsythe2025}, the fact remains that nearly all pre-trained LLMs utilize greedy tokenization and only consider the most ``optimal'' tokenization according to compression. Since this work is mostly about exploring the nature of tokenization effects inside LLMs it makes sense to look at primarily greedy tokenizers. In greedy tokenizers, a given text typically admits many equally valid non-canonical tokenizations under a fixed vocabulary. \textcite{cao2021} argue that reliance on greedy tokenization may artificially constrain model evaluation, proposing marginalization over all possible tokenizations as a more faithful alternative. Subsequent work, however, suggests that the difference between the full marginal likelihood and near-optimal tokenizations is empirically small \parencite{chirkova2023, geh2024}.
+
+\section{Generating Perturbations}\label{sec:pergen}
+
+\subsection{Generating Character-level Perturbations}
+
+Generating character level perturbations can be as simple as swapping characters of a string at random, but it wouldn't be very representative of robustness. A real scenario would introduce realistic character-level perturbations based on e.g.\ keyboard map distance. \textcite{liu2025} introduced \texttt{MULTYPO}, a multilingual typo generation algorithm that simulates human-like errors based on language-specific keyboard layouts and typing behavior. It supports 12 languages. \textcite{hou2026} introduces a benchmark for subtoken understanding for a variety of tasks, and includes keystroke decoding $\rightarrow$ canonical text tasks. They also include an OCR-noise algorithm, which injects OCR-type noise into a string, task being to decode that into the non-corrupted input.
+
+\subsection{Generating Representative Non-Canonical Tokenizations}
+
+To test non-canonical tokenization, some sort of sampling would likely be necessary, as the marginal likelihood is too computationally expensive for a thesis like this. And it wouldn't be worth it, seeing much of the signal is already present in the canonical tokenization \parencite{geh2024}, the interesting part is if the performance drop/semantics of non-canonical tokenization is captured differently cross-linguistically. Some options for sampling the marginal:
+\begin{itemize}
+    \item \textcite{pohl2025} provide code to approximate the marginal probability by using an automaton and transducer, which enables 30x speedup compared to running the model for each sample\footnote{This might be overkill for this thesis though, seeing as I'm not interested in the entire marginal, merely a few non-canonical tokenizations for each sequence to \textit{approximate} non-canonical tokenization marginal probability.}.
+    \item \textcite{geh2024} provide code to calculate marginal likelihood mass using a multi-valued decision diagram.
+\end{itemize}
+
+\end{document}

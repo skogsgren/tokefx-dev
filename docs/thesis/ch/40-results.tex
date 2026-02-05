@@ -1,0 +1,80 @@
+\chapter{Results} \label{cha:results}
+
+The \textbf{Results} chapter presents the outcomes of your study in a clear and objective manner. This is where you \textit{answer your research question(s)} using the data you have analyzed, but without interpreting or discussing implications—those are reserved for the next chapter.
+
+\subsection*{Purpose of the Chapter}
+
+The goal of this chapter is to:
+\begin{itemize}
+  \item Present the results of your analysis as directly and transparently as possible
+  \item Let the reader assess what the data shows, without being influenced by your interpretation
+  \item Use visual and tabular formats to enhance clarity and comparability
+\end{itemize}
+
+All results that are relevant to your research questions should be reported—regardless of whether they align with your expectations.
+
+\subsection*{Structure and Content}
+
+Structure the results logically, preferably in the same order as the research questions were introduced in earlier chapters. A suggested structure includes:
+
+\begin{enumerate}
+  \item \textbf{Overview of the Section} \\
+  Begin with a short paragraph that outlines what will be covered in the results chapter, and how it is organized (e.g., by research question, by experiment, by dataset).
+
+  \item \textbf{Results by Question or Theme} \\
+  Present results in separate subsections for each research question or theme. For example:
+  \begin{itemize}
+    \item \textit{RQ1: Performance of multilingual models on low-resource languages}
+    \item \textit{RQ2: Impact of domain adaptation}
+  \end{itemize}
+  Use informative headings for each subsection to guide the reader.
+
+  \item \textbf{Figures and Tables} \\
+  Use tables and figures to present quantitative data, model evaluations, comparisons with baselines, error rates, distributions, or qualitative categories. Follow these conventions:
+  \begin{itemize}
+    \item Tables and figures must be numbered and have descriptive captions.
+    \item Always refer to them in the text (e.g., ``Table~\ref{tab:results1} shows...’’).
+    \item Keep them clean and readable—avoid unnecessary precision or clutter.
+  \end{itemize}
+
+  \item \textbf{Textual Summary} \\
+  Provide a brief but precise explanation of what each table or figure shows. Avoid interpretation here—stick to what the data says.
+\end{enumerate}
+
+\subsection*{Quantitative vs. Qualitative Results}
+
+\begin{itemize}
+  \item \textbf{Quantitative Studies:} Report evaluation metrics such as accuracy, precision, recall, F1-score, BLEU, UAS/LAS, or confusion matrices. Include baseline comparisons and statistical significance tests if appropriate.
+
+  \item \textbf{Qualitative Studies:} Summarize patterns, categories, or thematic structures found in your data. Quote examples where relevant. For typological or annotation studies, tables of linguistic patterns or frequency counts are useful.
+
+  \item \textbf{Mixed Methods:} If you used both qualitative and quantitative approaches (e.g., error analysis + evaluation scores), present each separately, but highlight complementary findings.
+\end{itemize}
+
+\subsection*{Best Practices}
+
+\begin{itemize}
+  \item Present results in the same sequence as your research questions or hypotheses.
+  \item Be transparent—include unexpected or negative results.
+  \item Label all figures and tables consistently, e.g., ``Figure~\ref{fig:method_pipeline}'' or ``Table~\ref{tab:results1}''. The \texttt{fancyref} \LaTeX package can help with this: \Fref{fig:method_pipeline} and \Fref{tab:results1}.
+  \item Avoid interpretation—save that for the Discussion chapter.
+\end{itemize}
+
+%\vspace{0.5em}
+%\noindent
+\textit{Example Table:}
+
+\begin{table}[h]
+\centering
+\caption{F1-scores for multilingual models on three low-resource languages}
+\label{tab:results1}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model} & \textbf{Language A} & \textbf{Language B} & \textbf{Language C} \\
+\midrule
+mBERT         & 72.5                & 65.4                & 60.2 \\
+XLM-RoBERTa   & 75.8                & 67.9                & 62.7 \\
+Baseline      & 68.3                & 61.2                & 55.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

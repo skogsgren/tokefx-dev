@@ -1,0 +1,114 @@
+\chapter{Method} \label{cha:method}
+
+The \textbf{Method} chapter addresses the question: \textit{How was the study carried out?} It explains in detail your research strategy, data, tools, and procedures. The description should be clear and systematic so that another researcher, given the same resources, could replicate your study.
+
+The chapter also provides the foundation for evaluating the validity, reliability, and ethical integrity of your research. It should be detailed, transparent, and logically structured—ideally broken into subsections.
+
+\subsection*{Typical Structure}
+
+Depending on your thesis design (e.g., experimental, corpus-based, model development, or case study), you may adapt the headings, but the following structure is widely applicable in theses:
+
+\begin{enumerate}
+  \item \textbf{Research Design} \\
+  Briefly describe your overall research strategy. Is your study exploratory, comparative, experimental, corpus-analytic, or mixed-methods? State the rationale behind this choice.
+
+  \item \textbf{Data Collection} \\
+  Explain how your data was obtained. If you collected your own data (e.g., via annotation, scraping, or crowdsourcing), describe the process in detail: sampling criteria, tools used, preprocessing steps, etc. \\
+  If you used secondary data (e.g., an existing corpus or dataset), give a concise but precise description, including:
+  \begin{itemize}
+    \item Name of the dataset or corpus
+    \item Source or citation
+    \item Version and size (e.g., number of tokens, sentences, or files)
+    \item Relevant characteristics (language(s), genre, domain, etc.)
+    \item Any filtering or subsetting applied
+  \end{itemize}
+  Include proper citations and, if required, licenses for publicly available corpora such as those from the Universal Dependencies project, Hugging Face, ELRA, or similar.
+
+  \item \textbf{Experimental Setup or System Description} \\
+  If your study includes training or evaluating models, describe:
+  \begin{itemize}
+    \item The models or tools used (e.g., BERT \cite{devlin2019bert}, spaCy, UDPipe, Fairseq)
+    \item Hyperparameters, configuration details, and evaluation setup
+    \item Software libraries and versions (e.g., Python, PyTorch, Hugging Face Transformers)
+    \item Infrastructure (e.g., local machine, cloud computing, GPU specifications)
+  \end{itemize}
+  For annotation tasks, describe the guidelines, annotators, and inter-annotator agreement if applicable.
+
+  \item \textbf{Analysis Methods} \\
+  Explain how your data was analyzed to answer your research aim. This may include:
+  \begin{itemize}
+    \item Quantitative metrics (e.g., precision, recall, F1-score, BLEU, UAS/LAS)
+    \item Statistical methods or tests (e.g., t-tests, chi-square, correlation)
+    \item Qualitative or error analysis
+  \end{itemize}
+  Provide reasoning for why you chose particular methods or metrics, and mention any limitations.
+
+  \item \textbf{Ethical Considerations} \\
+  If your study involved human participants (e.g., annotators, survey respondents, or interviewees), describe:
+  \begin{itemize}
+    \item How participants were informed
+    \item How consent was obtained
+    \item How anonymity and data protection were ensured
+    \item Whether ethical approval was required and obtained
+  \end{itemize}
+  Refer to institutional policies and national guidelines, such as:
+  \begin{itemize}
+    \item Stockholm University’s research integrity and ethics policy \\\cite{suethics2021} and
+    \item Good Research Practice 2024 \cite{vr2024ethics}.
+\end{itemize}
+  \item \textbf{Appendices} \\
+  Include three appendices to document key aspects of the work: (1) a signed consent form by the author(s) of the thesis, (2) a statement on the usage and sharing of code and data, and (3) a declaration of the use of AI tools such as ChatGPT, detailing their purpose and extent of use in the thesis.
+  
+\end{enumerate}
+
+\subsection*{Best Practices}
+
+\begin{itemize}
+  \item Use figures or tables to summarize datasets, system configurations, or workflows, see e.g. Figure \ref{fig:methods} or Figure \ref{fig:method_pipeline} below.
+
+\begin{figure} [h]
+    \centering
+    \includegraphics[scale = 0.18]{fig/methods.png}
+    \caption{Research Strategies and Research Methods (Thesis compendium by the Department of Computer System and Sciences, Stockholm University, retrieved May 20, 2025)}
+    \label{fig:methods}
+\end{figure}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+\tikzstyle{process} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=gray!10]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.5cm and 2cm]
+
+% Nodes
+\node (data) [process] {Data Collection or Selection};
+\node (preprocess) [process, below=of data] {Preprocessing};
+\node (model) [process, below=of preprocess] {Model Training / Fine-tuning};
+\node (evaluate) [process, below=of model] {Evaluation};
+\node (analysis) [process, below=of evaluate] {Error Analysis \& Interpretation};
+
+% Arrows
+\draw [arrow] (data) -- (preprocess);
+\draw [arrow] (preprocess) -- (model);
+\draw [arrow] (model) -- (evaluate);
+\draw [arrow] (evaluate) -- (analysis);
+
+\end{tikzpicture}
+\caption{Overall structure of the method pipeline.}
+\label{fig:method_pipeline}
+\end{figure}
+
+
+  \item The method section should be described in sufficient detail to allow others to replicate the study, including precise information on data sources, tools, procedures, and any parameters or settings used, see also Appendix 2.
+  
+  \item If your method includes multiple stages (e.g., preprocessing, model training, evaluation), clearly outline each step in order.
+  \item Be honest and transparent about failed experiments, difficulties, or alternative approaches you considered.
+  \item Avoid post hoc justification—describe your decisions as they occurred, not as if everything went smoothly or was predetermined.
+\end{itemize}
+
+
+
+
+
