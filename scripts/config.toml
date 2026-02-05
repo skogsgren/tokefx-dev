@@ -1,0 +1,9 @@
+[data]
+languages=[
+    "eng_Latn",
+    "tur_Latn"
+]
+tokenizers=[
+    "gpt2",
+    "bigscience-bloom"
+]
