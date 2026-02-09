@@ -1,50 +1,45 @@
 \chapter{Background} \label{cha:background}
+% aim for 5-7 pages
+% suggested structure:
+%     topic introduction
+%     key concepts and definitions
+%     literature review
+%         foundational landmark studies
+%         recent developments and trends
+%         gaps, limitations, unresolved challenges
+%     position thesis in relation to literature
+%         research questions
 
-The \textbf{Background} chapter provides the conceptual, theoretical, and empirical foundation for your thesis. It helps the reader understand why your topic is important, how it fits into the broader research landscape, and what previous work has been done. This chapter should gradually lead the reader from a general understanding of the area to the specific purpose of your study.
+\subsection{Sub-word tokenization}
 
-\subsection*{Goals of the Background Chapter}
+\begin{description}
 
-\begin{itemize}
-  \item \textbf{Establish relevance:} Explain why your topic is significant in the context of AI and Language and, if relevant, in a wider AI or societal context.
-  \item \textbf{Situate the work:} Show where your study fits in the current state of research and why it adds something meaningful.
-  \item \textbf{Clarify key concepts:} Define the technical and theoretical concepts your thesis builds on or contributes to.
-  \item \textbf{Lead to the purpose:} Build a logical bridge toward your thesis purpose, which will be stated clearly at the end of the chapter.
-\end{itemize}
-
-\subsection*{Suggested Structure}
-
-Use subsections to provide clarity and organization. A common structure might look like this:
-
+\item[Byte-Pair Encoding]
+The Byte-Pair Encoding (BPE) algorithm, introduced by \citet{bpe2}, is a text compression algorithm. It was applied to Neural Machine Translation by \citet{bpe}, and was introduced to solve out-of-vocabulary issues. Compared to earlier approaches which relied on traditional word-mappings (like a dictionary), BPE allowed \textit{sub-word tokenization} based on arbitrary compression of a text. BPE has four general steps, which are applied differently depending on the training and/or goals of the specific tokenizer:
 \begin{enumerate}
-  \item \textbf{Introduction to the Topic} \\
-  Start by describing the broader topic of your thesis. This may include areas like machine translation, sentiment analysis, language modeling, or low-resource NLP. Provide a brief, non-technical motivation that a reader with general AI knowledge can follow.
+\item \textbf{Normalization:} Involves general cleanup, such as removing whitespace, and turning to lowercase.
 
-  \item \textbf{Key Concepts and Definitions} \\
-  Identify and explain core terms, models, or frameworks that are essential for understanding your study. For instance, define terms like ``transformers,'' ``zero-shot learning,'' or ``morphosyntactic alignment'' if they are central to your work. Cite sources if the terms are established; otherwise, clearly justify your own definitions.
+\item \textbf{Pre-tokenization:} For the BPE algorithm we need to know what we are compressing \textit{towards}, i.e.\ some sort of idea of what a \textit{word} is. In GPT2, for example, pre-tokenization involves splitting on spaces and punctuation.
 
-  \item \textbf{Review of Previous Work} \\
-  Summarize relevant research with appropriate references. Focus on:
-  \begin{itemize}
-    \item Foundational or landmark studies in the area
-    \item Recent developments or trends (especially in the last 5 years)
-    \item Gaps, limitations, or unresolved challenges in the literature
-  \end{itemize}
-  This is not an exhaustive literature review, but rather a focused survey that helps the reader understand the basis for your work.
+\item \textbf{Character-level split:} We reduce our training text to characters, and use those characters as our base vocabulary.
 
-  \item \textbf{Positioning Your Work} \\
-  Explain how your thesis builds on or diverges from previous work. Be explicit about what aspect of the field you are extending, challenging, replicating, or applying. This shows your awareness of how your study contributes to the ongoing scientific conversation.
+\item \textbf{Merge:} We define a desired vocabulary size, and perform merges based on the paired frequencies of our current vocabulary applied to our training set. For each merge we pick the most frequent pair as our next merge candidate.
 
 \end{enumerate}
 
-\subsection*{Best Practices}
+We can consider \texttt{WordPiece} \citep{wordpiece}, the tokenizer used in BERT \citep{devlin2019}, a variation of a BPE tokenizer. It differs in the way merges are selected. Instead of using the max frequency, we calculate a score by dividing by the product of the frequency of each part. If we have a 2-tuple pair $P$ with the two words $x$ and $y$, we calculate the score $S$ like follows for WordPiece:
 
-\begin{itemize}
-  \item Keep your writing structured and clear. Use headings and subheadings to break up the text logically.
-  \item Maintain a neutral and scholarly tone—avoid advocacy or speculation.
-  \item Use references consistently and appropriately. Focus on peer-reviewed and well-established sources, especially from established scientific venues. This includes conferences like ACL, AAAI, NeurIPS, EMNLP, ICDAR, EACL, NAACL, and LREC, as well as journals like Computational Linguistics (CL), Transactions of the ACL (TACL) and Journal of Machine Learning Research (JMLR). Sometimes there is also an arXiv version of a paper, but prefer the published version. Consult the Norwegian Register \footnote{\url{https://kanalregister.hkdir.no/en}} or your supervisor when in doubt.
-  \item Avoid discussing your own results or methodology here—those belong in later chapters.
-  \item Aim for 5–7 pages, depending on the complexity of the topic and depth of literature review.
-\end{itemize}
+\[
+S = \frac{|P|}{|x| \times |y|}
+\]
 
-\vspace{0.5em}
-\noindent
+During inference time these tokenizers are by design greedy, and pick the best compression of a text.
+
+\item[SentencePiece]
+SentencePiece, introduced by \citet{sentencepiece}, like BPE is primarily a text compression algorithm. However, it was introduced specifically to make less assumptions than BPE.
+
+\item[UniGram]
+
+\item[TokenMonster]
+
+\end{description}
