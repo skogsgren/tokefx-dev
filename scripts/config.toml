@@ -1,9 +1,12 @@
 [data]
 languages=[
     "eng_Latn",
-    "tur_Latn"
+    "tur_Latn",
 ]
-tokenizers=[
-    "gpt2",
-    "bigscience-bloom"
+models=[
+    "toksuite/tokenmonster-englishcode-32000-consistent-v1",
+    "toksuite/google-byt5-small",
+    "toksuite/facebook-xglm-564M",
+    "toksuite/bigscience-bloom",
+    "toksuite/gpt2",
 ]
