@@ -10,7 +10,9 @@
 %     position thesis in relation to literature
 %         research questions
 
-\subsection{Sub-word tokenization}
+\section{Tokenization Algorithms}
+
+There is no one tokenizer to rule them all. All tokenizers must make assumptions, and inherently lose information during encoding \citet{mielke2021}. What information is lost, and how much, is up to the indivudal algorithm chosen. There are drawbacks, and benefits to each.
 
 \begin{description}
 
@@ -33,13 +35,33 @@ We can consider \texttt{WordPiece} \citep{wordpiece}, the tokenizer used in BERT
 S = \frac{|P|}{|x| \times |y|}
 \]
 
-During inference time these tokenizers are by design greedy, and pick the best compression of a text.
+And then for encoding, for each token we start at the beginning and pick the longest subword in the vocabulary, and then do the same for the rest of the word.
 
-\item[SentencePiece]
-SentencePiece, introduced by \citet{sentencepiece}, like BPE is primarily a text compression algorithm. However, it was introduced specifically to make less assumptions than BPE.
+During inference time these tokenizers are by design greedy, and pick the best compression of a text. \citet{liu2025b} introduced SuperBPE, which uses non-greedy sampling during training to overcome the greedy design, with the hope to achieve more robust and performant language models.
 
 \item[UniGram]
+A UniGram language model considers the probability of $y|x$ without context, i.e.\ $p(y|x) = p(x) \times p(y)$. \citet{kudo2018} suggested the utilization of segmentation probability sampling from the UniGram language model. Specifically to act as a regularization method for more robustness in Neural Machine Translation (NMT) training. At each step in training we compute a loss over the current vocabulary $V$, and then for each symbol in $V$ we compute how much the loss would change if the symbol was removed. We gradually prune the symbols which would increase the least until we reach a desired vocabulary size. In practice, tokenizers utilizing UniGram, such as SentencePiece \citep{sentencepiece}, approximate this process by utilizing Viterbi decoding to get better performance.
 
-\item[TokenMonster]
+Getting a probability distribution is especially useful in multilingual scenarios, where we might not want to make assumptions about what can and can't constitute a token before we train our tokenizer. \citet{sentencepiece} introduces this framework specifically to be deterministic in decoding and encoding for multilingual scenarios. For example, Japanese doesn't utilize whitespace, while English does. In BPE we make such assumptions during the pre-tokenization, in SentencePiece we don't have to. \citet{lin2022} introduced the XLMG suite of models which utilizes SentencePiece with Unigram sampling of $\alpha = 0.3$ to train a multilingual tokenizer from 10 million sentences.
+
+\item[TokenMonster] \citet{forsythe2025} introduces TokenMonster, a wholly ungreedy algorithm for tokenization which utilizes lookahead to get achieve the optimal tokenization. Unlike BPE it does not assume a picked ``branch'' (i.e.\ a chosen merge during encoding) is beneficial, but that both branches might have been beneficial in the end. It is in this sense more similar to beam search.
+
+\item[Byte-level Tokenization] Some approaches forego subword tokens all-together, and instead simply use a mapping from text to their unicode byte representations \citep{mielke2021}. The By-T5 series of models, introduced by \citet{xue2022}, uses byte tokenization in an attempt to make less assumptions about the input, simplify preprocessing, and help with robustness to unseen tokens.
 
 \end{description}
+
+\section{Mechanistic Interpretability}
+
+Mechanistic interpretability is the field concerned with understanding the inner workings of neural networks.
+
+Early efforts were mostly concerned with vision \citep{cammarata2020a}, and focused on identifying humanly interpretable features. For example, features were found in neural models corresponding to grocery store detectors \citep{nguyen2016}, curve detectors \citep{cammarata2020b}, or even multimodal features \citep{goh2021}. Unlike vision, where we can easily \textit{visualize} our features, text-based LLMs don't offer the same direct type of interpretability. \citet{elhage2022a} argues this is because of the superposition hypothesis, where a model stores more features than it directly has dimensionality for. It does this by utilizing \textit{polysemantic} neurons, which are neurons which activate for many seemingly unrelated things and are only disambiguated to its \textit{monosemantic} variant by combined linear activation with other neurons. \citet{elhage2022b} demonstrated superposition emerging during training of small toy example language models, and that as feature sparsity increases, so does the prevalence of neurons stored in superposition. \citet{bricken2023} successfully derived monosemantic features using a sparse autoencoder, a type of sparse dictionary learning.
+
+\subsection{Transformed Language Models}
+
+For autoregressive decoder transformer models, like GPT, we solely do next-token prediction which we feed back into the model. We process one token at a time, perform some transformation to our current sequence, and get a next-token prediction, which we append to the current sequence. At each layer we have a self-attention mechanism and a Feed Forward Network (FFN) which updates these token representations. Each update is added to the output from the previous, forming the \textit{residual stream}. At the end, we softmax to our vocabulary dimension to get a probability distribution for the next token. At each given layer our representation thus represents the residual stream up until that layer.
+
+We can use this to probe the models internal thinking. One popular method is the \textit{logit lens} \citep{nostalgebraist}, which decodes the next token prediction from the output of each hidden state.
+
+\subsection{Detokenization}
+
+\citet{elhage2022a} introduced the notion of \textit{detokenization}, the hypothesis that LLMs use the early layers to map subword tokens to more useful concepts that the model can then use throughout the middle layers, and before \textit{retokenization} at late layers which is the opposite process. \citet{feucht2024} calls this the \textit{implicit} vocabulary of the model. They train linear probes for each layer in a Llama 2 7B / Llama 3 8B to show that multi-token entities, words, and phrases go through ``erasure,'' wherein information about tokens is primarily focused in the early layers of the model.
