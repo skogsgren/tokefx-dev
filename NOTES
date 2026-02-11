@@ -1,3 +1,50 @@
+DETOKENIZATION PAPER CONTRIBUTIONS
+> We establish that LLMs hold an internal lexicon of whole-words, which goes
+> beyond the tokenizer’s scope. [sic: which can include multi-word expressions]
+>
+> We show that this lexicon is robust to non-morphemic splits, typos and to
+> out-of-vocabulary words.
+>
+> We show that LLMs can “understand” internal representations of words in this
+> lexicon in a training-free manner: when feeding the inner representation of
+> such words to the model as input vectors, it can “understand” them despite
+> never seeing them during training.
+>
+> Moreover, we also show that the LLMs can generate such vectors, also without
+> additional training, despite never seeing such vectors as neither input nor
+> output.
+>
+> We present initial results that these findings can help reduce both input and
+> output sequence length, thereby potentially reducing both LLM cache size and
+> decoding time.
+>
+> We present evidence of the different components of the detokenization
+> process, linking it to both the attention and feedforward mechanisms.
+
+INNER LEXICON DEFINITION
+(from OpenReview thread):
+
+> We would first like to clarify what we mean by ‘inner lexicon’ and its
+> relation to contextualization. When processing words split into multiple
+> sub-word tokens, recent work identified a detokenization stage in the early
+> layers of LMs [1,2,3], in which such tokens are converted into meaningful
+> representations. In our work, we show evidence that to successfully perform
+> detokenization and reconstruct the full word representation, the model needs
+> to recall a “memory” of the word from its FFN layers–a process beyond pure
+> contextualization. These layers were previously shown to emulate neural
+> memories used to recall more abstract concepts [4,5]. We refer to this role
+> of FFNs as the model’s ‘inner lexicon’. We can see how this term might seem
+> abstract, and welcome any suggestions for a better term. Still, we find that
+> this mechanism cannot be explained by contextualization alone.
+
+[1] Nelson Elhage et al., Softmax Linear Units, Transformer Circuits Thread, 2022.
+[2] Wes Gurnee et al., Finding Neurons in a Haystack: Case Studies with Sparse Probing, Trans. Mach. Learn. Res., 2023.
+[3] Sheridan Feucht et al., Token Erasure as a Footprint of Implicit Vocabulary Items in LLMs, 2024.
+[4] Mor Geva et al., Transformer Feed-Forward Layers Are Key-Value Memories, EMNLP 2021.
+[5] Kevin Meng et al., Locating and Editing Factual Associations in GPT, NeurIPS 2023.
+
+So, maybe just go back to the source and use that as a base instead?
+
 FOLDER STRUCTURE
 I think structuring it as a Python package from the get-go is a good idea.
 
