@@ -1,4 +1,7 @@
 __pycache__
+.local/
+.cache/
+*.egg-info/
 
 docs/build
 

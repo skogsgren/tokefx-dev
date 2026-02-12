@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+## USAGE: run as current user, should be in docker group
+set -e
+
+IMAGE_NAME="teval"
+CONTAINER_NAME="tokefx"
+WORKSPACE="$HD2/tokefx-dev"
+
+docker run --rm --gpus all \
+  --name $CONTAINER_NAME \
+  --user "$(id -u)":"$(id -g)" \
+  -v "$WORKSPACE:/workspace/"\
+  $IMAGE_NAME \
+  bash -c "
+    set -euo pipefail
+    export HOME=/workspace &&
+    export PATH=/workspace/.local/bin:$PATH &&
+    cd /workspace/ &&
+
+    echo '$(date) installing dependencies...' &&
+    pip install -U pip &&
+    pip install -e .
+    pip install torch==2.6.0 &&
+
+    echo '$(date) running command: $1' &&
+    $1
+  "
