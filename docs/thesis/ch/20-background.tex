@@ -10,34 +10,30 @@
 %     position thesis in relation to literature
 %         research questions
 
+\textbf{Tokenization} is the process of segmentation and representation of our strings for use in corpora and machine learning systems \citep{jm3}. For example, how would we segment the English phrase `it's'? One alternative is to split it, \texttt{[it, 's]}. Another would be to remove the apostrophe, \texttt{[it, s]}. We could consider \texttt{[it, is]} as well. The list goes on. Those are the types of questions and decisions tokenization concerns. Traditionally, tokenization was seen as mapping input to dictionaries \citep{mielke2021}.
+
+In Neural Machine Learning and NLP, we currently most often use \textbf{sub-word tokenization}, utilizing compression algorithms to break text up in something in-between whole words and characters.
+
 \section{Tokenization Algorithms}
 
-There is no one tokenizer to rule them all. All tokenizers must make assumptions, and inherently lose information during encoding \citet{mielke2021}. What information is lost, and how much, is up to the indivudal algorithm chosen. There are drawbacks, and benefits to each.
+There is no one tokenizer to rule them all. All tokenizers must make assumptions, and inherently lose information during encoding \citep{mielke2021}. What information is lost, and how much, is up to the indivudal algorithm chosen.
 
 \begin{description}
 
 \item[Byte-Pair Encoding]
-The Byte-Pair Encoding (BPE) algorithm, introduced by \citet{bpe2}, is a text compression algorithm. It was applied to Neural Machine Translation by \citet{bpe}, and was introduced to solve out-of-vocabulary issues. Compared to earlier approaches which relied on traditional word-mappings (like a dictionary), BPE allowed \textit{sub-word tokenization} based on arbitrary compression of a text. BPE has four general steps, which are applied differently depending on the training and/or goals of the specific tokenizer:
+The Byte-Pair Encoding (BPE) algorithm, introduced by \citet{bpe2}, is a text compression algorithm. It was applied to Neural Machine Translation by \citet{bpe}, and was introduced to solve out-of-vocabulary issues. Compared to earlier approaches which relied on traditional word-mappings (like a dictionary), BPE allowed \textit{sub-word tokenization} based on arbitrary compression of a text. BPE has tree general steps, which are applied differently depending on the training and/or goals of the specific tokenizer:
+
 \begin{enumerate}
 \item \textbf{Normalization:} Involves general cleanup, such as removing whitespace, and turning to lowercase.
 
-\item \textbf{Pre-tokenization:} For the BPE algorithm we need to know what we are compressing \textit{towards}, i.e.\ some sort of idea of what a \textit{word} is. In GPT2, for example, pre-tokenization involves splitting on spaces and punctuation.
+\item \textbf{Pre-tokenization:} For the BPE algorithm we need to know what we are compressing \textit{towards}, i.e.\ some sort of idea of what a \textit{token} can be vs. what it can't be. In GPT2, for example, pre-tokenization involves not only splitting on spaces and punctuation, but also replacing all bytes of the given string with a corresponding representation. Since there are only 256 unique bytes, this allows an efficient reduction of the vocabulary size while still retaining no unknown tokens during inference. It does mean, however, that some characters --- especially those with different script than English --- are represented by several byte-level tokens during the pre-tokenization stage. For example, the Chinese string `可以跟你借一個火嗎？' is represented by the equivalent string `åı¯ä»¥è·Łä½łåĢŁä¸ĢåĢĭçģ«åĹİï¼Ł' after pre-tokenization using byte-level BPE.
 
-\item \textbf{Character-level split:} We reduce our training text to characters, and use those characters as our base vocabulary.
 
-\item \textbf{Merge:} We define a desired vocabulary size, and perform merges based on the paired frequencies of our current vocabulary applied to our training set. For each merge we pick the most frequent pair as our next merge candidate.
+\item \textbf{Merge:} We define a desired vocabulary size, and perform merges based on the paired frequencies of our current vocabulary applied to our training set. For a a byte-level BPE tokenizer our base vocabulary at the start of training will be a few special tokens (like \texttt{<|endoftext|>} $\rightarrow$ 50256) along with all possible bytes (1 - 256). For a character-level BPE tokenizer it will be the set of unique characters in our training data. For each merge we pick the most frequent pair as our next merge candidate, and then repeat until we reach our desired vocabulary size.
 
 \end{enumerate}
 
-We can consider \texttt{WordPiece} \citep{wordpiece}, the tokenizer used in BERT \citep{devlin2019}, a variation of a BPE tokenizer. It differs in the way merges are selected. Instead of using the max frequency, we calculate a score by dividing by the product of the frequency of each part. If we have a 2-tuple pair $P$ with the two words $x$ and $y$, we calculate the score $S$ like follows for WordPiece:
-
-\[
-S = \frac{|P|}{|x| \times |y|}
-\]
-
-And then for encoding, for each token we start at the beginning and pick the longest subword in the vocabulary, and then do the same for the rest of the word.
-
-During inference time these tokenizers are by design greedy, and pick the best compression of a text. \citet{liu2025b} introduced SuperBPE, which uses non-greedy sampling during training to overcome the greedy design, with the hope to achieve more robust and performant language models.
+During inference time BPE-style tokenizers are by design greedy, and pick the best compression of a text. \citet{liu2025b} introduced SuperBPE, which uses non-greedy sampling during training to overcome the greedy design, with the hope to achieve more robust and performant language models, though in pre-trained models this is rare.
 
 \item[UniGram]
 A UniGram language model considers the probability of $y|x$ without context, i.e.\ $p(y|x) = p(x) \times p(y)$. \citet{kudo2018} suggested the utilization of segmentation probability sampling from the UniGram language model. Specifically to act as a regularization method for more robustness in Neural Machine Translation (NMT) training. At each step in training we compute a loss over the current vocabulary $V$, and then for each symbol in $V$ we compute how much the loss would change if the symbol was removed. We gradually prune the symbols which would increase the least until we reach a desired vocabulary size. In practice, tokenizers utilizing UniGram, such as SentencePiece \citep{sentencepiece}, approximate this process by utilizing Viterbi decoding to get better performance.

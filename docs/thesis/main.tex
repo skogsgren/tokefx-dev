@@ -4,13 +4,22 @@
 \clubpenalty=10000
 \brokenpenalty=10000
 \usepackage[english]{babel}
-\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\setmainfont{MLMRoman10}
+\setsansfont{MLMSans10}
+\setCJKmainfont{FandolSong-Regular.otf}
+
+% gotta talk w. someone since these fonts don't support cjk
+% \usepackage{helvet}
+% \usepackage{utopia}
+% \usepackage[T1]{fontenc}
+
 \usepackage{csquotes}
 \MakeOuterQuote{"}
 \usepackage{sectsty}
-\usepackage{helvet}
-\usepackage{utopia}
 \usepackage{setspace}
 \usepackage{float}
 \usepackage{enumitem} % To adjust spacing in lists
