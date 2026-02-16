@@ -5,23 +5,35 @@ set -e
 IMAGE_NAME="teval"
 CONTAINER_NAME="tokefx"
 WORKSPACE="$HD2/tokefx-dev"
+UDPUD="$HD2/UD_PUD"
+
+INIT=0
+if [[ "${1:-}" == "--init" ]]; then
+  INIT=1
+  shift
+fi
 
 docker run --rm --gpus all \
   --name $CONTAINER_NAME \
   --user "$(id -u)":"$(id -g)" \
   -v "$WORKSPACE:/workspace/"\
+  -v "$UDPUD:/data" \
   $IMAGE_NAME \
-  bash -c "
+  bash -lc "
     set -euo pipefail
-    export HOME=/workspace &&
-    export PATH=/workspace/.local/bin:$PATH &&
-    cd /workspace/ &&
+    export HOME=/workspace
+    export PATH=/workspace/.local/bin:\$PATH
+    export PYTHONPATH=/workspace\${PYTHONPATH:+:\$PYTHONPATH}
+    cd /workspace
 
-    echo '$(date) installing dependencies...' &&
-    pip install -U pip &&
-    pip install -e .
-    pip install torch==2.6.0 &&
+    if [[ $INIT -eq 1 ]]; then
+      echo \"\$(date) installing dependencies...\"
+      python3 -m pip install -U pip
+      python3 -m pip install -e '.[dev]'
+      python3 -m pip install torch==2.6.0
+      python3 -m pip install -U 'optree>=0.13.0'
+    fi
 
-    echo '$(date) running command: $1' &&
-    $1
-  "
+    echo \"\$(date) running command:\" \"\$@\"
+    exec \"\$@\"
+  " -- "$@"
