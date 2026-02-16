@@ -12,6 +12,7 @@ dependencies = [
     "toml==0.10.2",
     "conllu==6.0.0",
     "transformers==4.51.3",
+    "optree>=0.13.0",
 ]
 
 [project.optional-dependencies]
