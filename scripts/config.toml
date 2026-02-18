@@ -1,26 +1,27 @@
-[data]
-UD_BASE="/data/UD-PUD"
-BELEBELE_BASE="/data/belebele"
+[dir]
+ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
+belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
+out="$MIMER_DIR/tokefx-dev/out"
 
-[languages]
+[lang]
 
-[data.lang.english]
+[lang.english]
 iso639="eng_Latn"
 handle="UD_English-PUD/en_pud-ud-test.conllu"
 
-[data.lang.turkish]
+[lang.turkish]
 iso639="tur_Latn"
 handle="UD_Turkish-PUD/tr_pud-tr-test.conllu"
 
-[data.lang.chinese]
+[lang.chinese]
 iso639="zho_Hans"
 handle="UD_Chinese-PUD/zh_pud-ud-test.conllu"
 
 [eval]
 # (model, tokenizer) tuples
 models=[
+    ["toksuite/bigscience-bloom", "bigscience/bloom"],
     ["toksuite/google-byt5-small", "google/byt5-small"],
     ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
-    ["toksuite/bigscience-bloom", "bigscience/bloom"],
     ["toksuite/gpt2", "gpt2"],
 ]
