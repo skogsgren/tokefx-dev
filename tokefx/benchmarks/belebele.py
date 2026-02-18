@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from constants import SPECIAL_TOKEN_RULES
+from tokefx.constants import SPECIAL_TOKEN_RULES
 
 
 def belebele(
@@ -42,7 +42,7 @@ def belebele(
         prefix = r["flores_passage"].strip() + " " + r["question"].strip() + " "
         mc_texts = []
         for ans_i in range(4):
-            mc_texts.append(prefix + r[f"mc_answer{ans_i+1}"].strip())
+            mc_texts.append(prefix + r[f"mc_answer{ans_i + 1}"].strip())
         corr_i = int(r["correct_answer_num"]) - 1
 
         option_losses = torch.zeros(len(mc_texts))
