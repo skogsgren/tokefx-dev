@@ -17,14 +17,20 @@ class TokenList:
         tokenizer: Tokenizer,
         min_tokens: int = 1,
         min_bytes: int = 1,
+        max_tokens: int = 0,
     ):
         self.tokenizer = tokenizer
 
         # controls at least how many tokens/bytes each "Token" yielded should be
         self.min_tokens = min_tokens
+        self.max_tokens = max_tokens
         self.min_bytes = min_bytes
 
         self.token_list = self._parse_tokens(data_file)
+
+    def __iter__(self):
+        for x in self.token_list:
+            yield x
 
     def _parse_tokens(self, data_file: Path) -> Iterable:
         with open(data_file) as f:
@@ -40,31 +46,6 @@ class TokenList:
         sub_tokens = self.tokenizer.encode(token)
         if len(sub_tokens) <= self.min_tokens:
             return
+        if self.max_tokens != 0 and self.max_tokens <= len(sub_tokens):
+            return
         return sub_tokens
-
-
-if __name__ == "__main__":
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    eng_token_list = TokenList(
-        Path("/hd2/gugr7935/UD_PUD/UD_English-PUD/en_pud-ud-test.conllu"),
-        tokenizer,
-        min_tokens=2,
-        min_bytes=3,
-    ).token_list
-    ic(len(list(eng_token_list)))
-
-    zh_token_list = TokenList(
-        Path("/hd2/gugr7935/UD_PUD/UD_Chinese-PUD/zh_pud-ud-test.conllu"),
-        tokenizer,
-        min_tokens=2,
-        min_bytes=7,
-    ).token_list
-    ic(len(list(zh_token_list)))
-
-    tu_token_list = TokenList(
-        Path("/hd2/gugr7935/UD_PUD/UD_Turkish-PUD/tr_pud-ud-test.conllu"),
-        tokenizer,
-        min_tokens=2,
-        min_bytes=9,
-    ).token_list
-    ic(len(list(tu_token_list)))
