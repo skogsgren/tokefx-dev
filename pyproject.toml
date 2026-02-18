@@ -13,6 +13,8 @@ dependencies = [
     "conllu==6.0.0",
     "transformers==4.51.3",
     "optree>=0.13.0",
+    "sentencepiece==0.2.1",
+    "protobuf",
 ]
 
 [project.optional-dependencies]
