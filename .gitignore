@@ -6,5 +6,6 @@ __pycache__
 data/
 docs/build
 logs/
+out/
 
 *.swp
