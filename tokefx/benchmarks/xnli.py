@@ -24,10 +24,13 @@ def format_xnli(premise: str, hypothesis: str, lang: str) -> list[str]:
     y = XNLI_LANG[lang]["ENTAILMENT_LABEL"]
     a = XNLI_LANG[lang]["NEUTRAL_LABEL"]
     n = XNLI_LANG[lang]["CONTRADICTION_LABEL"]
+
+    c = ", " if lang != "zh" else "，"
+    qm = "? " if lang != "zh" else "？"
     return [
-        f"{p}, {q}? {y}, {h}",  # entailment (0)
-        f"{p}, {q}? {a}, {h}",  # neutral (1)
-        f"{p}, {q}? {n}, {h}",  # contradiction (2)
+        f"{p}{c}{q}{qm}{y}{c}{h}",  # entailment (0)
+        f"{p}{c}{q}{qm}{a}{c}{h}",  # neutral (1)
+        f"{p}{c}{q}{qm}{n}{c}{h}",  # contradiction (2)
     ]
 
 
