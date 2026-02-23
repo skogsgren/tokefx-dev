@@ -1,3 +1,7 @@
+BENCHMARKS
+    Global-MMLU seems promising, but might be overkill for the TokSuite models.
+
+
 DETOKENIZATION PAPER CONTRIBUTIONS
 > We establish that LLMs hold an internal lexicon of whole-words, which goes
 > beyond the tokenizer’s scope. [sic: which can include multi-word expressions]
