@@ -5,8 +5,6 @@ from typing import Iterator
 import conllu
 from transformers import AutoTokenizer
 
-from icecream import ic
-
 
 @dataclass
 class PUDToken:
@@ -22,13 +20,20 @@ class PUDSequence:
     sentence_id: int
     pud_tokens: list[PUDToken]
 
+    def __iter__(self) -> Iterator[PUDToken]:
+        for token in self.pud_tokens:
+            yield token
+
+    def __getitem__(self, i: int):
+        return self.pud_tokens[i]
+
     def get_text_til_i(self, idx: int):
         text = ""
-        for i in range(idx):
+        for i in range(idx + 1):  # +1 since 0 indexing is a thing
             text += self.pud_tokens[i].form
             # since spaces are added after and not before tokens we have to
             # make sure we don't add a space after the index we're after
-            if self.pud_tokens[i].space_after and i != idx - 1:
+            if self.pud_tokens[i].space_after and i != idx:
                 text += " "
         return text
 
@@ -44,15 +49,20 @@ class PUD_Data:
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_spec)
         self.context_window = context_window
         self.datafp = datafp
+        self.comparison_mode = "intra_token"
         self.add_special_tokens = add_special_tokens
+
+        self._seqs: list | None = None
 
     def _parse_seq(self, seq: conllu.models.TokenList) -> PUDSequence:
         sequence_id = seq.metadata["parallel_id"]
         pud_tokens = []
+        prev_space_after = False  # at start of sequence we don't have a space
         for i, tok in enumerate(seq):
             space_after = (tok.get("misc") or {}).get("SpaceAfter") != "No"
+            form = " " + tok["form"] if prev_space_after else tok["form"]
             input_ids = self.tokenizer(
-                tok["form"],
+                form,
                 add_special_tokens=self.add_special_tokens,
                 truncation=True,
                 max_length=self.context_window,
@@ -60,31 +70,18 @@ class PUD_Data:
             pud_tokens.append(
                 PUDToken(i, tok["form"], tok["upos"], input_ids, space_after)
             )
+            prev_space_after = space_after
         return PUDSequence(sequence_id, pud_tokens)
 
+    def _load_seqs(self):
+        if self._seqs is None:
+            text = self.datafp.read_text()
+            self._seqs = conllu.parse(text)
+        return self._seqs
+
+    def __len__(self) -> int:
+        return len(self._load_seqs())
+
     def __iter__(self) -> Iterator[PUDSequence]:
-        text = self.datafp.read_text()
-        for sent_idx, seq in enumerate(conllu.parse(text)):
+        for seq in self._load_seqs():
             yield self._parse_seq(seq)
-
-
-if __name__ == "__main__":
-    tokenizer_spec = "google/byt5-small"
-    tokenizer_spec = "gpt2"
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_spec)
-
-    for n in range(2, 5):
-        for lang in ["en", "zh", "tr"]:
-            length = 0
-            data = PUD_Data(
-                datafp=Path(f"./{lang}_pud-ud-test.conllu"),
-                tokenizer_spec=tokenizer_spec,
-            )
-            for i, x in enumerate(data):
-                for tok in x.pud_tokens:
-                    if len(tok.input_ids) != n:
-                        continue
-                    length += 1
-                    if length <= 2:
-                        ic(n, lang, tok.form, tok.input_ids)
-            print(f"({lang.upper()}, {n})\t{length}")
