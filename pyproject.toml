@@ -18,6 +18,7 @@ dependencies = [
     "deepmerge==2.0",
     "python-iso639==2026.1.31",
     "protobuf",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
