@@ -1,0 +1,40 @@
+[dir]
+ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
+belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
+out="$MIMER_DIR/tokefx-dev/out"
+
+[lang]
+
+[lang.english]
+iso639="eng_Latn"
+pud-conllu="UD_English-PUD/en_pud-ud-test.conllu"
+
+[lang.turkish]
+iso639="tur_Latn"
+pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
+
+[lang.chinese]
+iso639="zho_Hans"
+pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
+
+[lang.swedish]
+iso639="swe_Latn"
+pud-conllu="UD_Swedish-PUD/sv_pud-ud-test.conllu"
+
+[eval]
+# (model, tokenizer) tuples
+models=[
+    ["toksuite/bigscience-bloom", "bigscience/bloom"],
+    ["toksuite/google-byt5-small", "google/byt5-small"],
+    ["toksuite/facebook-xglm-564M", "toksuite/facebook-xglm-564M"],
+    ["toksuite/gpt2", "gpt2"],
+    ["toksuite/meta-llama-Llama-3.2-1B", "meta/llama-Llama-3.2-1B"],
+]
+device="cuda"
+add_special_tokens=false
+skip_punct=true
+skip_propn=true
+skip_part=true
+allow_foreign_words=false
+context_window=4096
+n_rows=150
