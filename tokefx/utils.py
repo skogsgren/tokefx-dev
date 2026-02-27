@@ -6,7 +6,8 @@ from deepmerge import always_merger
 import json
 import toml
 
-from icecream import ic
+import torch
+from transformers import AutoTokenizer
 
 
 def load_config(cfg_path: Path | str) -> dict:
@@ -33,3 +34,35 @@ def set_json(json_path: Path | str, new_data: dict):
             indent=2,
         )
     )
+
+
+def tokenize(
+    tokenizer: AutoTokenizer,
+    text: str,
+    context_window: int,
+    add_special_tokens: bool = False,
+    device: torch.device = torch.device("cpu"),
+):
+    enc = tokenizer(
+        text,
+        return_tensors="pt",
+        add_special_tokens=add_special_tokens,
+        truncation=True,
+        max_length=context_window,
+    )
+    return {k: v.to(device) for k, v in enc.items()}
+
+
+def token_len(
+    tokenizer: AutoTokenizer,
+    text: str,
+    context_window: int,
+    add_special_tokens: bool = False,
+) -> int:
+    enc = tokenize(
+        tokenizer=tokenizer,
+        text=text,
+        context_window=context_window,
+        add_special_tokens=add_special_tokens,
+    )
+    return len(enc["input_ids"][0])
