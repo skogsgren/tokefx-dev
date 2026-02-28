@@ -24,7 +24,12 @@ class AttentionAnalyzer:
             model_spec,
             attn_implementation="eager",  # needed to reliably return attentions
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_spec)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_spec)
+        except KeyError:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer_spec, use_fast=False
+            )
         self.context_window = context_window
         self.add_special_tokens = add_special_tokens
         self.device = torch.device(device)
