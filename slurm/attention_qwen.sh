@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --gpus-per-node=T4:1
+#SBATCH --gpus-per-node=A40:1
 #SBATCH --nodes=1
 #SBATCH -t 0-12:00:0
 #SBATCH --output=logs/attention/log-%j.out
@@ -21,5 +21,5 @@ source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
 echo "$(date) starting attention evaluation"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-python3 scripts/attention.py
+python3 scripts/attention_qwen.py
 echo "$(date) finished attention evaluation"

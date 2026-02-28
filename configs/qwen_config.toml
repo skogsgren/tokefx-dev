@@ -1,7 +1,7 @@
 [dir]
 ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
 belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
-out="$MIMER_DIR/tokefx-dev/out"
+out="$MIMER_DIR/tokefx-dev/out/qwen"
 
 [lang]
 
@@ -21,18 +21,13 @@ pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
 iso639="swe_Latn"
 pud-conllu="UD_Swedish-PUD/sv_pud-ud-test.conllu"
 
-[lang.arabic]
-iso639="arb_Latn"
-pud-conllu="UD_Arabic-PUD/ar_pud-ud-test.conllu"
-
 [eval]
 # (model, tokenizer) tuples
 models=[
-    ["toksuite/bigscience-bloom", "bigscience/bloom"],
-    ["toksuite/google-byt5-small", "google/byt5-small"],
-    ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
-    ["toksuite/gpt2", "gpt2"],
-    ["toksuite/Qwen-Qwen3-8B", "Qwen/Qwen3-8B"]
+    ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-0.6B"],
+    ["Qwen/Qwen3-1.7B", "Qwen/Qwen3-1.7B"],
+    ["Qwen/Qwen3-4B", "Qwen/Qwen3-4B"],
+    ["Qwen/Qwen3-8B", "Qwen/Qwen3-8B"],
 ]
 device="cuda"
 add_special_tokens=false

@@ -15,12 +15,12 @@ from tokefx.utils import load_config
 
 from icecream import ic
 
-CFG = load_config("configs/toksuite_config.toml")
+CFG = load_config("configs/qwen_config.toml")
 
 OUT_DIR = CFG["dir"]["out"]
 OUT_DIR.mkdir(exist_ok=True)
-OUT_ATTN = OUT_DIR / "full_attn.tsv"
-OUT_HEADS = OUT_DIR / "full_attn_heads.tsv"
+OUT_ATTN = OUT_DIR / "qwen_full_attn.tsv"
+OUT_HEADS = OUT_DIR / "qwen_full_attn_heads.tsv"
 df = pd.read_csv(OUT_ATTN, sep="\t") if OUT_ATTN.exists() else pd.DataFrame()
 head_df = pd.read_csv(OUT_HEADS, sep="\t") if OUT_HEADS.exists() else pd.DataFrame()
 
@@ -126,5 +126,5 @@ if no_previous_run("fivetoken"):
     )
 
 
-attention_plots(OUT_ATTN, OUT_DIR / "plots")
-attention_head_plots(OUT_HEADS, OUT_DIR / "plots")
+attention_plots(OUT_ATTN, OUT_DIR / "plots_qwen")
+attention_head_plots(OUT_HEADS, OUT_DIR / "plots_qwen")
