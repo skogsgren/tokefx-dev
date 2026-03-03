@@ -21,5 +21,5 @@ source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
 echo "$(date) starting attention evaluation for Qwen models"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-python3 scripts/attention.py configs/qwen_config.toml
+python3 scripts/attention.py configs/qwen_mean_config.toml
 echo "$(date) finished attention evaluation for Qwen models"
