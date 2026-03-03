@@ -4,8 +4,6 @@ import json
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from icecream import ic
-
 
 class AttentionAnalyzer:
     def __init__(
@@ -111,23 +109,6 @@ class AttentionAnalyzer:
                 prev_token_space_after = False
         return spans
 
-    def _pick_source_indices(self, seq, spans, tok, start, end, seq_len, text):
-        num_subtokens = end - start
-        q = end - 1
-        if num_subtokens == 1:
-            if tok.idx == 0:
-                return None, None
-            prev = seq[tok.idx - 1]
-            if not prev.upos or prev.upos in self.ignored_pos:
-                return None, None
-            p_start, p_end = spans[prev.idx]
-            candidates = list(range(p_start, p_end))
-        else:
-            candidates = list(range(start, end - 1))
-        return q, [candidates[-1]]
-        # or the following for the mean
-        # return q, candidates
-
     def _score(self, attn, q, source_indices):
         scores = []
         head_rows = []
@@ -186,7 +167,6 @@ class AttentionAnalyzer:
     def _compound_q_src(self, spans, dep_tok, head_tok, source_aggregation=None):
         d_start, d_end = spans[dep_tok.idx]
         h_start, h_end = spans[head_tok.idx]
-        ic(d_start, d_end, h_start, h_end, dep_tok.form, head_tok.form)
         if d_start is None or d_end is None or h_start is None or h_end is None:
             return None, None
         if (d_end - d_start) < 1 or (h_end - h_start) < 1:
@@ -203,9 +183,6 @@ class AttentionAnalyzer:
             goal = int(goal * 2)
         rows = []
         heads = []
-        mode = kwargs["mode"]
-        tgt_len = kwargs.get("tgt_len", None)
-        min_context = kwargs["min_context"]
 
         print(f"{datetime.now()} {len(rows)}/{goal}")
         for seq in data:
@@ -218,13 +195,12 @@ class AttentionAnalyzer:
             spans = self._create_spans(seq, text, enc)
 
             input_ids = enc["input_ids"][0]
-            seq_len = int(input_ids.shape[0])
-
             if kwargs.get("mode") == "compound":
+                # we assume only two parts in compound
                 for dep, head in self._iter_compound_pairs(seq):
                     if goal and len(rows) >= goal:
                         break
-                    if head.idx < min_context:
+                    if head.idx < kwargs["min_context"]:
                         continue
                     q, source_indices = self._compound_q_src(
                         spans,
@@ -255,20 +231,19 @@ class AttentionAnalyzer:
                     heads += h_rows
                     print(f"{datetime.now()} {len(rows)}/{goal}")
                     continue
+            elif kwargs.get("mode") == "boundary":
+                for tok in seq:
+                    if goal and len(rows) >= goal:
+                        break
+                    if tok.idx < kwargs["min_context"]:
+                        continue
+                    if not tok.upos or tok.upos in self.ignored_pos:
+                        continue
+                    token_bytes = len(tok.form.encode("utf-8"))
+                    assert token_bytes > 0
 
-            for tok in seq:
-                if goal and len(rows) >= goal:
-                    break
-                if tok.idx < min_context:
-                    continue
-                if not tok.upos or tok.upos in self.ignored_pos:
-                    continue
-                token_bytes = len(tok.form.encode("utf-8"))
-                assert token_bytes > 0
+                    start, end = spans[tok.idx]
 
-                start, end = spans[tok.idx]
-
-                if kwargs.get("mode") == "boundary":
                     if tok.idx == 0:
                         continue
                     prev_start, prev_end = spans[tok.idx - 1]
@@ -313,58 +288,4 @@ class AttentionAnalyzer:
                         heads += h_rows
                         print(f"{datetime.now()} {len(rows)}/{goal}")
                     continue
-                elif kwargs.get("mode") == "compound":
-                    pass
-
-                num_subtokens = end - start
-                if num_subtokens != tgt_len:
-                    continue
-
-                q, source_indices = self._pick_source_indices(
-                    seq,
-                    spans,
-                    tok,
-                    start,
-                    end,
-                    seq_len,
-                    text,
-                )
-                if source_indices is None or q is None:
-                    continue
-                scores, head_rows = self._score(attn, q, source_indices)
-
-                for layer_i, head_i, v in head_rows:
-                    heads.append(
-                        {
-                            "mode": mode,
-                            "sentence_id": seq.sentence_id,
-                            "token_id": tok.idx,
-                            "tgt_len": tgt_len,
-                            "query_index": q,
-                            "source_index": int(source_indices[0]),
-                            "layer": layer_i,
-                            "head": head_i,
-                            "score": v,
-                        }
-                    )
-
-                row = {f"layer_{i + 1:02d}": scores[i] for i in range(len(scores))}
-                row["sentence_id"] = seq.sentence_id
-                row["token_form"] = tok.form
-                row["token_id"] = tok.idx
-                row["token_upos"] = tok.upos
-                row["num_subtokens"] = num_subtokens
-                row["token_bytes"] = token_bytes
-                row["subtokens_per_byte"] = num_subtokens / token_bytes
-                row["query_index"] = q
-                src = int(source_indices[0])
-                row["source_index"] = src
-                row["source_token_decoded"] = self.tokenizer.decode(
-                    [int(input_ids[src].item())]
-                )
-                row["query_token_decoded"] = self.tokenizer.decode(
-                    [int(input_ids[q].item())]
-                )
-                rows.append(row)
-                print(f"{datetime.now()} {len(rows)}/{goal}")
         return rows, heads

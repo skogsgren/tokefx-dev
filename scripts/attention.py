@@ -124,37 +124,5 @@ if "boundary" in analyses:
             min_context=4,
         )
 
-if "singletoken" in analyses and no_previous_run("singletoken"):
-    attn_run_wrapper(
-        mode_label="singletoken",
-        mode="prev_subtokens",
-        tgt_len=1,
-        min_context=4,
-    )
-
-if "twotoken" in analyses and no_previous_run("twotoken"):
-    attn_run_wrapper(
-        mode_label="twotoken",
-        mode="prev_subtokens",
-        tgt_len=2,
-        min_context=4,
-    )
-
-if "threetoken" in analyses and no_previous_run("threetoken"):
-    attn_run_wrapper(
-        mode_label="threetoken",
-        mode="prev_subtokens",
-        tgt_len=3,
-        min_context=4,
-    )
-
-if "fourtoken" in analyses and no_previous_run("fourtoken"):
-    attn_run_wrapper(
-        mode_label="fourtoken",
-        mode="prev_subtokens",
-        tgt_len=4,
-        min_context=4,
-    )
-
 attention_plots(OUT_ATTN, OUT_DIR / "plots")
 attention_head_plots(OUT_HEADS, OUT_DIR / "plots")
