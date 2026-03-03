@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 from datetime import datetime
 import gc
 import json
@@ -8,21 +9,37 @@ import pandas as pd
 import torch
 from transformers import AutoTokenizer
 
-from tokefx.data import PUD_Data, get_rho, get_ref
+from tokefx.data import PUD_Data
 from tokefx.interpretability.attention import AttentionAnalyzer
 from tokefx.plot import attention_plots, attention_head_plots
 from tokefx.utils import load_config
 
-from icecream import ic
-
-CFG = load_config("configs/toksuite_config.toml")
+parser = argparse.ArgumentParser()
+parser.add_argument("cfg", type=Path, help="path to config file")
+parser.add_argument(
+    "--overwrite",
+    action="store_true",
+    help="overwrites existing attention files",
+)
+args = parser.parse_args()
+CFG = load_config(args.cfg)
+analyses = set(CFG["eval"]["analyses"])
+print(f"{datetime.now()} starting attention analysis run")
+print(analyses)
+print(CFG)
 
 OUT_DIR = CFG["dir"]["out"]
+OUT_ATTN = OUT_DIR / "full_attn.parquet"
+OUT_HEADS = OUT_DIR / "full_attn_heads.parquet"
+if args.overwrite:
+    OUT_ATTN.unlink(missing_ok=True)
+    OUT_HEADS.unlink(missing_ok=True)
+    if (OUT_DIR / "plots").exists():
+        assert (OUT_DIR / "plots").is_dir()
+        shutil.rmtree(OUT_DIR / "plots")
 OUT_DIR.mkdir(exist_ok=True)
-OUT_ATTN = OUT_DIR / "full_attn.tsv"
-OUT_HEADS = OUT_DIR / "full_attn_heads.tsv"
-df = pd.read_csv(OUT_ATTN, sep="\t") if OUT_ATTN.exists() else pd.DataFrame()
-head_df = pd.read_csv(OUT_HEADS, sep="\t") if OUT_HEADS.exists() else pd.DataFrame()
+df = pd.read_parquet(OUT_ATTN) if OUT_ATTN.exists() else pd.DataFrame()
+head_df = pd.read_parquet(OUT_HEADS) if OUT_HEADS.exists() else pd.DataFrame()
 
 
 def attn_run_wrapper(**kwargs) -> list[dict]:
@@ -44,6 +61,7 @@ def attn_run_wrapper(**kwargs) -> list[dict]:
                 tokenizer,
                 device=CFG["eval"]["device"],
                 add_special_tokens=CFG["eval"]["add_special_tokens"],
+                ignored_pos=CFG["eval"].get("ignored_pos", set()),
             )
             run_kwargs = dict(kwargs)
             run_kwargs["lang"] = lang

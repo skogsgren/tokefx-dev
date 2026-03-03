@@ -21,5 +21,6 @@ source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
 echo "$(date) starting attention evaluation"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-python3 scripts/attention.py
+python3 scripts/attention.py configs/toksuite_config.toml
+python3 scripts/attention.py configs/qwen_config.toml
 echo "$(date) finished attention evaluation"

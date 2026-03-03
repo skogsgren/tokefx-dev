@@ -29,6 +29,12 @@ models=[
     ["Qwen/Qwen3-4B", "Qwen/Qwen3-4B"],
     ["Qwen/Qwen3-8B", "Qwen/Qwen3-8B"],
 ]
+analyses=[
+    "singletoken",
+    "twotoken",
+    "treetoken",
+    "fourtoken",
+]
 device="cuda"
 add_special_tokens=false
 skip_punct=true
