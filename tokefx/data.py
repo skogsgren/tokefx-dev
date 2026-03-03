@@ -3,11 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Optional
 
-from statistics import fmean
 from transformers import AutoTokenizer
 import conllu
-
-from tokefx.utils import token_len
 
 
 @dataclass
@@ -97,50 +94,3 @@ class PUD_Data:
             if len(parsed) == 0:
                 continue
             yield parsed
-
-
-def get_rho(cfg: dict) -> list[dict[str, object]]:
-    """compute rho = mean(num_subtokens / token_bytes) for each (model, lang)"""
-    rho_rows = []
-    for model_name, tokenizer_spec in cfg["eval"]["models"]:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_spec)
-        for lang, spec in cfg["lang"].items():
-            time = datetime.now()
-            print(f"{time} calculating rho for {lang=} {model_name=} {tokenizer_spec=}")
-            data = PUD_Data(datafp=cfg["dir"]["ud_base"] / spec["pud-conllu"])
-            total_subtokens = 0
-            total_bytes = 0
-            for seq in data:
-                prev_end = 0  # == len(tokenize(prefix up to previous token))
-                for i, tok in enumerate(seq):
-                    if cfg["eval"]["skip_punct"] and tok.upos == "PUNCT":
-                        continue
-                    if tok.upos == "FW":
-                        continue
-                    end = token_len(
-                        tokenizer=tokenizer,
-                        text=seq.text_until_token(i),
-                        context_window=cfg["eval"]["context_window"],
-                        add_special_tokens=cfg["eval"]["add_special_tokens"],
-                    )
-                    n_raw = end - prev_end
-                    prev_end = end
-                    token_bytes = len(tok.form.encode("utf-8"))
-                    if n_raw == 0 or token_bytes == 0:
-                        continue
-                    total_subtokens += n_raw
-                    total_bytes += token_bytes
-            print(f"\t{lang=} {tokenizer_spec=} {total_subtokens=} {total_bytes=}")
-            rho = total_subtokens / total_bytes
-            rho_rows.append({"model": model_name, "lang": lang, "rho": rho})
-    return rho_rows
-
-
-def get_ref(rho: list[dict], lang: str) -> dict[str, float]:
-    """helper function to make looping over a reference language easier"""
-    res = {}
-    for row in rho:
-        if row["lang"] != lang:
-            continue
-        res[row["model"]] = row["rho"]
-    return res
