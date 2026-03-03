@@ -65,15 +65,15 @@ def save_tsv(df: pd.DataFrame, out_path: str):
     df.to_csv(out_path, sep="\t", index=False)
 
 
-def load_and_melt_raw_tsv(input_tsv: str) -> tuple[pd.DataFrame, list[str]]:
+def load_and_melt_raw_tsv(input_parquet: str) -> tuple[pd.DataFrame, list[str]]:
     """
-    Input: wide TSV with columns:
+    Input: parquet with columns:
       - lang, model, mode
       - layer_01 ... layer_N
       - plus arbitrary other columns (ignored)
     Output: long df with columns: lang, model, mode, layer, value
     """
-    df = pd.read_csv(input_tsv, sep="\t")
+    df = pd.read_parquet(input_parquet)
 
     required = {"lang", "model", "mode"}
     if not required.issubset(df.columns):
@@ -319,11 +319,11 @@ def attention_plots(input_tsv: str, output_dir: str):
 # -----------------------------
 def load_head_tsv(input_tsv: str) -> pd.DataFrame:
     """
-    Input: long TSV with columns including:
+    Input: parquet with columns including:
       lang, model, mode, layer, head, score
     Output: cleaned df with those columns typed.
     """
-    df = pd.read_csv(input_tsv, sep="\t")
+    df = pd.read_parquet(input_tsv)
 
     required = {"lang", "model", "mode", "layer", "head", "score"}
     if not required.issubset(df.columns):
