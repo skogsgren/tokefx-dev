@@ -17,29 +17,31 @@ pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
 iso639="zho_Hans"
 pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
 
-[lang.swedish]
-iso639="swe_Latn"
-pud-conllu="UD_Swedish-PUD/sv_pud-ud-test.conllu"
+[lang.japanese]
+iso639="jpn_Jpan"
+pud-conllu="UD_Japanese-PUD/ja_pud-ud-test.conllu"
 
 [eval]
-# (model, tokenizer) tuples
-models=[
+models=[ # (model, tokenizer) tuples
     ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-0.6B"],
     ["Qwen/Qwen3-1.7B", "Qwen/Qwen3-1.7B"],
     ["Qwen/Qwen3-4B", "Qwen/Qwen3-4B"],
     ["Qwen/Qwen3-8B", "Qwen/Qwen3-8B"],
 ]
 analyses=[
-    "singletoken",
-    "twotoken",
-    "treetoken",
-    "fourtoken",
+    "boundary",
+    "compound",
+]
+ignored_pos=[
+    "PROPN", # proper nouns (since they're probably identical between some languages)
+    "PUNCT", # punctuation
+    "PART", # particles
+    "SYM", # symbols
+    "NUM", # numbers
+    "X", # foreign words
 ]
 device="cuda"
 add_special_tokens=false
-skip_punct=true
-skip_propn=true
-skip_part=true
-allow_foreign_words=false
-context_window=4096
 n_rows=150
+context_window=4096
+# source_aggregation="mean"
