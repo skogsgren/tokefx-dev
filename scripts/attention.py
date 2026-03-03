@@ -4,6 +4,7 @@ from datetime import datetime
 import gc
 import json
 from pathlib import Path
+import shutil
 
 import pandas as pd
 import torch
@@ -66,10 +67,8 @@ def attn_run_wrapper(**kwargs) -> list[dict]:
             run_kwargs = dict(kwargs)
             run_kwargs["lang"] = lang
             run_kwargs["model"] = model
-            run_kwargs["skip_punct"] = CFG["eval"]["skip_punct"]
-            run_kwargs["skip_propn"] = CFG["eval"]["skip_propn"]
-            run_kwargs["skip_part"] = CFG["eval"]["skip_part"]
-            run_kwargs["allow_foreign_words"] = CFG["eval"]["allow_foreign_words"]
+            if src_agg := CFG["eval"].get("source_aggregation"):
+                run_kwargs["source_aggregation"] = src_agg
             rows, heads = analyzer.analyze(data, CFG["eval"]["n_rows"], **run_kwargs)
 
             del analyzer
@@ -79,21 +78,26 @@ def attn_run_wrapper(**kwargs) -> list[dict]:
             for i in range(len(rows)):
                 rows[i]["lang"] = lang
                 rows[i]["model"] = model
-                rows[i]["mode"] = kwargs["mode_label"]
+                if not rows[i].get("mode"):
+                    rows[i]["mode"] = kwargs["mode_label"]
                 all_rows.append(rows[i])
             for i in range(len(heads)):
                 heads[i]["lang"] = lang
                 heads[i]["model"] = model
-                heads[i]["mode"] = kwargs["mode_label"]
+                if not heads[i].get("mode"):
+                    heads[i]["mode"] = kwargs["mode_label"]
                 all_heads.append(heads[i])
 
     df = pd.concat([df, pd.DataFrame(all_rows)], ignore_index=True)
-    df.to_csv(OUT_ATTN, index=False, sep="\t")
+    df.to_parquet(OUT_ATTN, index=False)
     head_df = pd.concat([head_df, pd.DataFrame(all_heads)], ignore_index=True)
-    head_df.to_csv(OUT_HEADS, index=False, sep="\t")
+    head_df.to_parquet(OUT_HEADS, index=False)
 
 
 def no_previous_run(label: str) -> bool:
+    if args.overwrite:
+        print("overwrite set to true. overwriting previous run...")
+        return True
     mode = df.get("mode")
     if mode is None:
         return True
@@ -103,7 +107,24 @@ def no_previous_run(label: str) -> bool:
     return True
 
 
-if no_previous_run("singletoken"):
+if "compound" in analyses:
+    if no_previous_run("compound"):
+        attn_run_wrapper(
+            mode="compound",
+            mode_label="compound",
+            min_context=4,
+        )
+
+
+if "boundary" in analyses:
+    if no_previous_run("in_boundary") and no_previous_run("out_boundary"):
+        attn_run_wrapper(
+            mode="boundary",
+            mode_label="boundary",
+            min_context=4,
+        )
+
+if "singletoken" in analyses and no_previous_run("singletoken"):
     attn_run_wrapper(
         mode_label="singletoken",
         mode="prev_subtokens",
@@ -111,7 +132,7 @@ if no_previous_run("singletoken"):
         min_context=4,
     )
 
-if no_previous_run("twotoken"):
+if "twotoken" in analyses and no_previous_run("twotoken"):
     attn_run_wrapper(
         mode_label="twotoken",
         mode="prev_subtokens",
@@ -119,7 +140,7 @@ if no_previous_run("twotoken"):
         min_context=4,
     )
 
-if no_previous_run("threetoken"):
+if "threetoken" in analyses and no_previous_run("threetoken"):
     attn_run_wrapper(
         mode_label="threetoken",
         mode="prev_subtokens",
@@ -127,22 +148,13 @@ if no_previous_run("threetoken"):
         min_context=4,
     )
 
-if no_previous_run("fourtoken"):
+if "fourtoken" in analyses and no_previous_run("fourtoken"):
     attn_run_wrapper(
         mode_label="fourtoken",
         mode="prev_subtokens",
         tgt_len=4,
         min_context=4,
     )
-
-if no_previous_run("fivetoken"):
-    attn_run_wrapper(
-        mode_label="fivetoken",
-        mode="prev_subtokens",
-        tgt_len=5,
-        min_context=4,
-    )
-
 
 attention_plots(OUT_ATTN, OUT_DIR / "plots")
 attention_head_plots(OUT_HEADS, OUT_DIR / "plots")
