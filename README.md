@@ -55,6 +55,19 @@ python3 scripts/attention.py configs/debug_config.toml
 
 Which would create plots and data files under `./out/debug`.
 
+### ALVIS/SLURM Notes
+
+In the [`/slurm`](/slurm) folder are SLURM scripts to run on your favorite SLURM cluster. They were made with [ALVIS](https://www.c3se.chalmers.se/about/Alvis/) in mind, so details for your local SLURM may vary. For ALVIS the setup is as you suspect, e.g.:
+
+```{bash}
+module purge
+module load "PyTorch/2.7.1-foss-2024a-CUDA-12.6.0"
+python3 -m venv /path/to/venv
+source /path/to/venv/bin/activate
+pip3 install -e .
+sbatch slurm/attention_toksuite.sh
+```
+
 ## Compiling Documents
 
 There's a [`Makefile`](docs/Makefile) included to compile $\LaTeX{}$ files
