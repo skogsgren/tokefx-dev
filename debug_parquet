@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import argparse
+import pandas as pd
+import re
+
+parser = argparse.ArgumentParser(
+    description="CLI to debug parquet with cut-like syntax",
+)
+parser.add_argument(
+    "inp",
+    help="/path/to/parquet/file",
+)
+parser.add_argument(
+    "-f",
+    help="columns to slice (cut syntax)",
+    required=False,
+)
+parser.add_argument(
+    "--no_layers",
+    action="store_true",
+    help="don't print layer columns",
+)
+args = parser.parse_args()
+
+df = pd.read_parquet(args.inp)
+column_len = len(df.columns)
+if args.f:
+    idx = []
+    nums = [int(x) for x in re.findall(r"\d+", args.f)]
+    if args.f[0] == "-":
+        for i in range(int(re.search(r"\d+", args.f).group(0))):
+            idx.append(i)
+    for n in nums:
+        idx.append(n)
+    if args.f[-1] == "-":
+        for i in range(nums[-1], column_len):
+            idx.append(i)
+elif args.no_layers:
+    idx = []
+    for i, label in enumerate(df.columns):
+        if re.search("layer", label):
+            continue
+        idx.append(i)
+else:
+    idx = list(range(column_len))
+cols = df.columns[idx]
+print(df.loc[:, cols].to_csv(index=False, sep="\t"))
