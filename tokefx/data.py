@@ -33,18 +33,8 @@ class PUDSequence:
     def __len__(self) -> int:
         return len(self.pud_tokens)
 
-    def prefix_before_token(self, idx: int) -> str:
-        if idx < 0:
-            return ""
-        parts: list[str] = []
-        for i in range(idx):
-            tok = self.pud_tokens[i]
-            parts.append(tok.form)
-            if tok.space_after:
-                parts.append(" ")
-        return "".join(parts)
-
     def full_text(self) -> str:
+        """returns string of how the sequence would look like in text"""
         parts = []
         for tok in self.pud_tokens:
             parts.append(tok.form)
