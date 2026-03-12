@@ -29,5 +29,15 @@ proposal:
 	cp "$$tmp/main.pdf" "$(OUT)/proposal.pdf"; \
 	cp "$$tmp/slides.pdf" "$(OUT)/proposal_slides.pdf"
 
+methodology:
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d)"; \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	mkdir -p "$(OUT)"; \
+	cp references.bib "$$tmp/"; \
+	cp -a update_methodology/. "$$tmp/"; \
+	(cd "$$tmp" && tectonic slides.tex); \
+	cp "$$tmp/slides.pdf" "$(OUT)/methodology.pdf"
+
 clean:
 	@rm -rf "$(OUT)"
