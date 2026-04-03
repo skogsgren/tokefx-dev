@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import datetime
 import os
 from pathlib import Path
 
@@ -8,6 +9,8 @@ import toml
 
 import torch
 from transformers import AutoTokenizer
+
+LOG_FILE = Path("./ALLMIGHTY.log")
 
 
 def load_config(cfg_path: Path | str) -> dict:
@@ -34,3 +37,10 @@ def set_json(json_path: Path | str, new_data: dict):
             indent=2,
         )
     )
+
+
+def log(msg: str):
+    fmt_msg = f"{datetime.now()} {msg}"
+    print(fmt_msg)
+    with open(LOG_FILE, "a") as f:
+        f.write(fmt_msg + "\n")
