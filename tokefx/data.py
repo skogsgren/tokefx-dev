@@ -1,11 +1,17 @@
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+import json
 from pathlib import Path
 from typing import Iterator, Optional
 import random
 
 from transformers import AutoTokenizer
 import conllu
+
+FORM_EXCEPTIONS = {
+    "'s",
+    "'",
+}
 
 
 @dataclass
@@ -16,6 +22,10 @@ class PUDToken:
     deprel: str
     head: int
     space_after: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PUDToken":
+        return cls(**data)
 
 
 @dataclass
@@ -33,6 +43,16 @@ class PUDSequence:
     def __len__(self) -> int:
         return len(self.pud_tokens)
 
+    def text_til_i(self, tgt: int) -> str:
+        parts = []
+        for i, tok in enumerate(self.pud_tokens):
+            parts.append(tok.form)
+            if i == tgt:
+                break
+            if tok.space_after and tok.form not in FORM_EXCEPTIONS:
+                parts.append(" ")
+        return "".join(parts)
+
     def full_text(self) -> str:
         """returns string of how the sequence would look like in text"""
         parts = []
@@ -41,6 +61,49 @@ class PUDSequence:
             if tok.space_after:
                 parts.append(" ")
         return "".join(parts).rstrip()
+
+    def to_dict(self) -> dict:
+        return {
+            "sentence_id": self.sentence_id,
+            "pud_tokens": [asdict(tok) for tok in self.pud_tokens],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PUDSequence":
+        return cls(
+            sentence_id=data["sentence_id"],
+            pud_tokens=[PUDToken.from_dict(tok) for tok in data["pud_tokens"]],
+        )
+
+
+@dataclass
+class PUDCandidate:
+    lang: str
+    model: str
+    token: PUDToken
+    seq: PUDSequence
+
+    @property
+    def seq_id(self) -> str:
+        return self.seq.sentence_id
+
+    def to_dict(self) -> dict:
+        return {
+            "lang": self.lang,
+            "model": self.model,
+            "seq_id": self.seq.sentence_id,
+            "token": asdict(self.token),
+            "seq": self.seq.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PUDCandidate":
+        return cls(
+            lang=data["lang"],
+            model=data["model"],
+            token=PUDToken.from_dict(data["token"]),
+            seq=PUDSequence.from_dict(data["seq"]),
+        )
 
 
 class PUD_Data:
@@ -61,7 +124,7 @@ class PUD_Data:
         sentence_id = seq.metadata["parallel_id"]
         pud_tokens: list[PUDToken] = []
 
-        # keep only syntactic words and skip range IDs / empty nodes.
+        # filter out multi-word tokens
         filtered = [tok for tok in seq if isinstance(tok.get("id"), int)]
         for i, tok in enumerate(filtered):
             space_after = (tok.get("misc") or {}).get("SpaceAfter") != "No"
@@ -86,3 +149,22 @@ class PUD_Data:
             if len(parsed) == 0:
                 continue
             yield parsed
+
+
+def write_candidates_jsonl(candidates: list[PUDCandidate], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        for cand in candidates:
+            json.dump(cand.to_dict(), f, ensure_ascii=False, separators=(",", ":"))
+            f.write("\n")
+
+
+def iter_candidates_jsonl(path: Path, model: str, lang: str) -> Iterator[PUDCandidate]:
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            candidate = PUDCandidate.from_dict(json.loads(line.strip()))
+            if candidate.model != model:
+                continue
+            if candidate.lang != lang:
+                continue
+            yield candidate
