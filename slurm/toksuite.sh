@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#SBATCH --gpus-per-node=A40:1
+#SBATCH --gpus-per-node=T4:1
 #SBATCH --nodes=1
-#SBATCH -t 0-01:00:0
-#SBATCH --output=logs/attention_llama/log-%j.out
+#SBATCH -t 0-23:00:0
+#SBATCH --output=logs/toksuite/log-%j.out
 #SBATCH -A NAISS2025-22-601
 set -euo pipefail
 
@@ -19,7 +19,9 @@ module load "PyTorch/2.7.1-foss-2024a-CUDA-12.6.0"
 echo "$(date) activating venv"
 source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
-echo "$(date) starting attention evaluation for Llama 3.2 models"
+echo "$(date) starting evaluation for toksuite models"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-python3 scripts/attention.py configs/llama_config.toml
-echo "$(date) finished attention evaluation for Llama 3.2 models"
+python3 scripts/attention.py configs/toksuite_config.toml
+python3 scripts/lahis.py configs/toksuite_config.toml
+python3 scripts/patchscopes.py configs/toksuite_config.toml
+echo "$(date) finished evaluation for toksuite models"

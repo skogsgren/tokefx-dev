@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --gpus-per-node=A40:1
 #SBATCH --nodes=1
-#SBATCH -t 0-01:00:0
-#SBATCH --output=logs/attention_qwen/log-%j.out
+#SBATCH -t 0-23:00:0
+#SBATCH --output=logs/qwen/log-%j.out
 #SBATCH -A NAISS2025-22-601
 set -euo pipefail
 
@@ -19,7 +19,9 @@ module load "PyTorch/2.7.1-foss-2024a-CUDA-12.6.0"
 echo "$(date) activating venv"
 source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
-echo "$(date) starting attention evaluation for Qwen models"
+echo "$(date) starting evaluation for Qwen models"
 cd "$MIMER_DIR/tokefx-dev/" || exit
 python3 scripts/attention.py configs/qwen_config.toml
-echo "$(date) finished attention evaluation for Qwen models"
+python3 scripts/lahis.py configs/qwen_config.toml
+python3 scripts/patchscopes.py configs/qwen_config.toml
+echo "$(date) finished evaluation for Qwen models"
