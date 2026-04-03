@@ -17,8 +17,12 @@ dependencies = [
     "sentencepiece==0.2.1",
     "deepmerge==2.0",
     "python-iso639==2026.1.31",
+    "pandas",
+    "pyarrow",
     "protobuf",
     "matplotlib",
+    "seaborn",
+    "scipy",
 ]
 
 [project.optional-dependencies]
