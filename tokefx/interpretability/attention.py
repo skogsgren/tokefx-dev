@@ -139,3 +139,114 @@ class AttentionAnalyzer:
             layer_rows.append(sc_row)
             log(f"{len(layer_rows)}/{goal} ({src_token}) <- ({tgt_token})")
         return layer_rows, head_rows
+
+
+def get_ablation_map(
+    parquet_fp: Path,
+    top_k: int | None = None,
+    mode_a: str = "in_boundary",
+    mode_b: str = "out_boundary",
+    rank_by: str = "min_z",
+    min_layer: int = 0,
+    max_layer: int = 0,
+) -> dict[str, dict[str, pd.DataFrame]]:
+    df = pd.read_parquet(parquet_fp)
+    df["layer"] = pd.to_numeric(df["layer"], errors="coerce")
+    df["head"] = pd.to_numeric(df["head"], errors="coerce")
+
+    if min_layer:
+        df = df[df["layer"] >= int(min_layer)].copy()
+    if max_layer:
+        df = df[df["layer"] <= int(max_layer)].copy()
+
+    g = df.groupby(["lang", "model", "mode", "layer", "head"], as_index=False).agg(
+        mean_score=("score", "mean"),
+        mean_norm=("head_norm", "mean"),
+    )
+
+    a = (
+        g[g["mode"] == mode_a]
+        .drop(columns=["mode"])
+        .rename(
+            columns={
+                "mean_score": "a_score",
+                "mean_norm": "a_norm",
+            }
+        )
+    )
+    b = (
+        g[g["mode"] == mode_b]
+        .drop(columns=["mode"])
+        .rename(
+            columns={
+                "mean_score": "b_score",
+                "mean_norm": "b_norm",
+            }
+        )
+    )
+
+    merged = a.merge(
+        b,
+        on=["lang", "model", "layer", "head"],
+        how="inner",
+    )
+
+    merged["score_delta"] = merged["a_score"] - merged["b_score"]
+    merged["norm_delta"] = merged["a_norm"] - merged["b_norm"]
+
+    out: dict[str, dict[str, pd.DataFrame]] = {}
+    for lang, df_lang in merged.groupby("lang", sort=True):
+        out[lang] = {}
+        for model, df_model in df_lang.groupby("model", sort=True):
+            d = df_model.copy()
+            d = d[(d["score_delta"] > 0) & (d["norm_delta"] > 0)].copy()
+
+            d["score_z"] = (d["score_delta"] - d["score_delta"].mean()) / (
+                d["score_delta"].std(ddof=0) + 1e-9
+            )
+            d["norm_z"] = (d["norm_delta"] - d["norm_delta"].mean()) / (
+                d["norm_delta"].std(ddof=0) + 1e-9
+            )
+
+            d["sum_z"] = d["score_z"] + d["norm_z"]
+            d["min_z"] = d[["score_z", "norm_z"]].min(axis=1)
+            d["product_z"] = d["score_z"] * d["norm_z"]
+
+            ranked = (
+                d[
+                    [
+                        "layer",
+                        "head",
+                        "a_score",
+                        "b_score",
+                        "score_delta",
+                        "score_z",
+                        "a_norm",
+                        "b_norm",
+                        "norm_delta",
+                        "norm_z",
+                        "sum_z",
+                        "min_z",
+                        "product_z",
+                    ]
+                ]
+                .sort_values(
+                    [rank_by, "score_delta", "norm_delta", "layer", "head"],
+                    ascending=[False, False, False, True, True],
+                )
+                .reset_index(drop=True)
+            )
+            ranked = ranked[ranked[rank_by] > 0.0]
+
+            if top_k is not None:
+                ranked = ranked.head(top_k).copy()
+
+            if top_k is None:
+                top_k = len(ranked)
+
+            out[lang][model] = {}
+            for row in ranked.head(top_k).to_dict(orient="records"):
+                if row["layer"] not in out[lang][model]:
+                    out[lang][model][row["layer"]] = []
+                out[lang][model][row["layer"]].append(row["head"])
+    return out
