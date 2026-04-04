@@ -1,4 +1,4 @@
-]
+[dir]
 ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
 belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
 out="$MIMER_DIR/tokefx-dev/out/qwen"
