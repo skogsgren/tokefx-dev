@@ -143,7 +143,7 @@ class AttentionAnalyzer:
 
 def get_ablation_map(
     parquet_fp: Path,
-    top_k: int | None = None,
+    topk: int | None = None,
     mode_a: str = "in_boundary",
     mode_b: str = "out_boundary",
     rank_by: str = "min_z",
@@ -238,14 +238,14 @@ def get_ablation_map(
             )
             ranked = ranked[ranked[rank_by] > 0.0]
 
-            if top_k is not None:
-                ranked = ranked.head(top_k).copy()
+            if topk is not None:
+                ranked = ranked.head(topk).copy()
 
-            if top_k is None:
-                top_k = len(ranked)
+            if topk is None:
+                topk = len(ranked)
 
             out[lang][model] = {}
-            for row in ranked.head(top_k).to_dict(orient="records"):
+            for row in ranked.head(topk).to_dict(orient="records"):
                 if row["layer"] not in out[lang][model]:
                     out[lang][model][row["layer"]] = []
                 out[lang][model][row["layer"]].append(row["head"])

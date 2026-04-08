@@ -78,6 +78,9 @@ if args.overwrite_embed:
     OUT_EMBED_SUMMARY.unlink(missing_ok=True)
 
 log("getting attention head candidates for ablation")
+ablation_map_rank_by = BASE_KWARGS.get("ablation_map_rank_by", "min_z")
+ablation_map_max_layer = BASE_KWARGS.get("ablation_map_max_layer", 10)
+ablation_map_topk = BASE_KWARGS.get("ablation_map_topk", 20)
 if ABLATION_MAP_TYPE == "lahis":
     OUT_HEAD_JSON_DIR = OUT_DIR / f"lahis_head_candidates_{args.in_boundary_mode}"
     assert OUT_HEAD_JSON_DIR.is_dir()
@@ -85,10 +88,17 @@ if ABLATION_MAP_TYPE == "lahis":
 elif ABLATION_MAP_TYPE == "attention_mass":
     OUT_HEAD_PARQUET = OUT_DIR / f"full_attn_heads_{args.in_boundary_mode}.parquet"
     global_ablation_map = get_ablation_map(
-        OUT_HEAD_PARQUET, max_layer=10, rank_by="min_z"
+        OUT_HEAD_PARQUET,
+        max_layer=ablation_map_max_layer,
+        rank_by=ablation_map_rank_by,
+        topk=ablation_map_topk,
     )
 else:
     raise ValueError("unknown ablation map type. how did you get here?")
+with open(
+    OUT_DIR / f"ablation_map_{args.in_boundary_mode}_{args.ablation_map_type}.json", "w"
+) as f:
+    json.dump(global_ablation_map, f)
 
 if len(df) == 0:
     existing = set()

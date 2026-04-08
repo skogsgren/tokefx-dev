@@ -15,10 +15,10 @@ patchscopes_prompt="Repeat this word: X, X, X,"
 # pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
 # patchscopes_prompt="Bu kelimeyi tekrarla: X, X, X,"
 
-# [lang.chinese]
-# iso639="zho_Hans"
-# pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
-# patchscopes_prompt="重複這個字：X、X、X、"
+[lang.chinese]
+iso639="zho_Hans"
+pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
+patchscopes_prompt="重複這個字：X、X、X、"
 
 # [lang.swedish]
 # iso639="swe_Latn"
@@ -37,7 +37,7 @@ patchscopes_prompt="Repeat this word: X, X, X,"
 models=[ # (model, tokenizer) tuples
     # ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-0.6B"],
     # ["Qwen/Qwen3-1.7B", "Qwen/Qwen3-1.7B"],
-    # ["toksuite/gpt2", "gpt2"],
+    ["toksuite/gpt2", "gpt2"],
     # ["toksuite/google-byt5-small", "google/byt5-small"],
     ["toksuite/google-gemma-2-2b", "google/gemma-2-2b"],
     # ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
@@ -68,3 +68,6 @@ min_tokens_per_candidate=2
 min_context=4
 n_rows=15
 context_window=4096
+ablation_map_rank_by="score_delta"
+ablation_map_max_layer=15
+ablation_map_topk=15
