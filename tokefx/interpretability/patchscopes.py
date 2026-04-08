@@ -132,7 +132,7 @@ class PatchScopesAnalyzer:
             for layer_idx, heads in self.ablation_map.items():
                 ablation_map[layer_idx] = random.sample(
                     [x for x in range(n_heads) if x not in heads],
-                    k=len(heads),
+                    k=min(len(heads), n_heads - len(heads)),
                 )
         else:
             ablation_map = {}
