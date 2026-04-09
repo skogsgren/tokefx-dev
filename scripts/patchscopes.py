@@ -87,11 +87,15 @@ if ABLATION_MAP_TYPE == "lahis":
     global_ablation_map = get_lahis_ablation_map(OUT_HEAD_JSON_DIR)
 elif ABLATION_MAP_TYPE == "attention_mass":
     OUT_HEAD_PARQUET = OUT_DIR / f"full_attn_heads_{args.in_boundary_mode}.parquet"
-    global_ablation_map = get_ablation_map(
+    global_ablation_map, ablation_map_df = get_ablation_map(
         OUT_HEAD_PARQUET,
         max_layer=ablation_map_max_layer,
         rank_by=ablation_map_rank_by,
         topk=ablation_map_topk,
+    )
+    ablation_map_df.to_parquet(
+        OUT_DIR
+        / f"ablation_map_{args.in_boundary_mode}_{args.ablation_map_type}.parquet"
     )
 else:
     raise ValueError("unknown ablation map type. how did you get here?")
@@ -99,6 +103,7 @@ with open(
     OUT_DIR / f"ablation_map_{args.in_boundary_mode}_{args.ablation_map_type}.json", "w"
 ) as f:
     json.dump(global_ablation_map, f)
+
 
 if len(df) == 0:
     existing = set()

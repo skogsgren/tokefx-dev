@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from math import ceil
 import random
 from pathlib import Path
 
@@ -141,7 +142,7 @@ class AttentionAnalyzer:
         return layer_rows, head_rows
 
 
-def get_ablation_map(
+def __get_ablation_map(
     parquet_fp: Path,
     topk: int | None = None,
     mode_a: str = "in_boundary",
@@ -194,6 +195,7 @@ def get_ablation_map(
     merged["score_delta"] = merged["a_score"] - merged["b_score"]
     merged["norm_delta"] = merged["a_norm"] - merged["b_norm"]
 
+    ranked_df = pd.DataFrame()
     out: dict[str, dict[str, pd.DataFrame]] = {}
     for lang, df_lang in merged.groupby("lang", sort=True):
         out[lang] = {}
@@ -236,11 +238,14 @@ def get_ablation_map(
                 )
                 .reset_index(drop=True)
             )
-            ranked = ranked[ranked[rank_by] > 0.0]
+            ranked["lang"] = lang
+            ranked["model"] = model
+            # NOTE: this sets whether or not we enforce >0.0 for the score
+            # ranked = ranked[ranked[rank_by] > 0.0]
+            ranked_df = pd.concat([ranked_df, ranked])
 
             if topk is not None:
                 ranked = ranked.head(topk).copy()
-
             if topk is None:
                 topk = len(ranked)
 
@@ -249,4 +254,194 @@ def get_ablation_map(
                 if row["layer"] not in out[lang][model]:
                     out[lang][model][row["layer"]] = []
                 out[lang][model][row["layer"]].append(row["head"])
+    return out, ranked_df
+
+
+def _load_and_filter(
+    parquet_fp: Path, min_layer: int = 0, max_layer: int = 0
+) -> pd.DataFrame:
+    df = pd.read_parquet(parquet_fp).copy()
+    df["layer"] = pd.to_numeric(df["layer"], errors="coerce")
+    df["head"] = pd.to_numeric(df["head"], errors="coerce")
+
+    df = df.dropna(subset=["layer", "head"]).copy()
+    df["layer"] = df["layer"].astype(int)
+    df["head"] = df["head"].astype(int)
+
+    if min_layer:
+        df = df[df["layer"] >= min_layer]
+    if max_layer:
+        df = df[df["layer"] <= max_layer]
+
+    return df
+
+
+def _merge_modes(df: pd.DataFrame, mode_a: str, mode_b: str) -> pd.DataFrame:
+    grouped = df.groupby(
+        ["lang", "model", "mode", "layer", "head"], as_index=False
+    ).agg(
+        mean_score=("score", "mean"),
+        mean_norm=("head_norm", "mean"),
+    )
+    wide = grouped[grouped["mode"].isin([mode_a, mode_b])].pivot(
+        index=["lang", "model", "layer", "head"],
+        columns="mode",
+        values=["mean_score", "mean_norm"],
+    )
+    wide.columns = [f"{mode}_{metric.split('_')[1]}" for metric, mode in wide.columns]
+    wide = wide.reset_index()
+    wide = wide.rename(
+        columns={
+            f"{mode_a}_score": "a_score",
+            f"{mode_a}_norm": "a_norm",
+            f"{mode_b}_score": "b_score",
+            f"{mode_b}_norm": "b_norm",
+        }
+    )
+
+    wide["score_delta"] = wide["a_score"] - wide["b_score"]
+    wide["norm_delta"] = wide["a_norm"] - wide["b_norm"]
+
+    return wide
+
+
+def _rank_heads(
+    df_model: pd.DataFrame, rank_by: str, lang: str, model: str
+) -> pd.DataFrame:
+    # d = df_model[(df_model["score_delta"] > 0) & (df_model["norm_delta"] > 0)].copy()
+    d = df_model.copy()
+    if d.empty:
+        return d
+
+    d["score_z"] = (d["score_delta"] - d["score_delta"].mean()) / (
+        d["score_delta"].std(ddof=0) + 1e-9
+    )
+    d["norm_z"] = (d["norm_delta"] - d["norm_delta"].mean()) / (
+        d["norm_delta"].std(ddof=0) + 1e-9
+    )
+
+    d["sum_z"] = d["score_z"] + d["norm_z"]
+    d["min_z"] = d[["score_z", "norm_z"]].min(axis=1)
+    d["product_z"] = d["score_z"] * d["norm_z"]
+
+    ranked = (
+        d[
+            [
+                "layer",
+                "head",
+                "a_score",
+                "b_score",
+                "score_delta",
+                "score_z",
+                "a_norm",
+                "b_norm",
+                "norm_delta",
+                "norm_z",
+                "sum_z",
+                "min_z",
+                "product_z",
+            ]
+        ]
+        .sort_values(
+            [rank_by, "score_delta", "norm_delta", "layer", "head"],
+            ascending=[False, False, False, True, True],
+        )
+        .reset_index(drop=True)
+    )
+
+    ranked = ranked[ranked[rank_by] > 0].copy()
+    ranked["lang"] = lang
+    ranked["model"] = model
+    return ranked
+
+
+def _resolve_topk(
+    topk: int | float | None,
+    *,
+    n_layers: int,
+    n_heads: int,
+) -> int | None:
+    if topk is None:
+        return None
+
+    if isinstance(topk, int):
+        if topk < 0:
+            raise ValueError("topk must be >= 0")
+        return topk
+
+    if isinstance(topk, float):
+        if not (0 < topk <= 1):
+            raise ValueError("float topk must be in the interval (0, 1]")
+        total_heads = n_layers * n_heads
+        return max(1, ceil(topk * total_heads))
+
+    raise TypeError("topk must be an int, a float in (0, 1], or None")
+
+
+def _select_global_with_layer_caps(
+    ranked: pd.DataFrame, topk: int | None
+) -> pd.DataFrame:
+    limit = len(ranked) if topk is None else min(topk, len(ranked))
+    per_layer_cap = (
+        ranked.groupby("layer")["head"].max().floordiv(2).astype(int).to_dict()
+    )
+
+    selected = []
+    used_per_layer: dict[int, int] = {}
+
+    for row in ranked.itertuples(index=False):
+        layer = int(row.layer)
+        used = used_per_layer.get(layer, 0)
+        cap = per_layer_cap.get(layer, 0)
+
+        if used >= cap:
+            continue
+
+        selected.append(row._asdict())
+        used_per_layer[layer] = used + 1
+
+        if len(selected) >= limit:
+            break
+
+    return pd.DataFrame(selected)
+
+
+def _to_ablation_map(selected: pd.DataFrame) -> dict[int, list[int]]:
+    out: dict[int, list[int]] = {}
+    for row in selected.itertuples(index=False):
+        out.setdefault(int(row.layer), []).append(int(row.head))
     return out
+
+
+def get_ablation_map(
+    parquet_fp: Path,
+    topk: int | float | None = None,
+    mode_a: str = "in_boundary",
+    mode_b: str = "out_boundary",
+    rank_by: str = "sum_z",
+    min_layer: int = 0,
+    max_layer: int = 0,
+) -> tuple[dict[str, dict[str, dict[int, list[int]]]], pd.DataFrame]:
+    df = _load_and_filter(parquet_fp, min_layer=min_layer, max_layer=max_layer)
+    merged = _merge_modes(df, mode_a=mode_a, mode_b=mode_b)
+
+    n_layers = int(df["layer"].max()) + 1
+    n_heads = int(df["head"].max()) + 1
+    resolved_topk = _resolve_topk(topk, n_layers=n_layers, n_heads=n_heads)
+
+    out: dict[str, dict[str, dict[int, list[int]]]] = {}
+    ranked_parts = []
+
+    for (lang, model), df_model in merged.groupby(["lang", "model"], sort=True):
+        ranked = _rank_heads(df_model, rank_by=rank_by, lang=lang, model=model)
+        ranked_parts.append(ranked)
+
+        selected = _select_global_with_layer_caps(ranked, topk=resolved_topk)
+
+        out.setdefault(lang, {})
+        out[lang][model] = _to_ablation_map(selected)
+
+    ranked_df = (
+        pd.concat(ranked_parts, ignore_index=True) if ranked_parts else pd.DataFrame()
+    )
+    return out, ranked_df
