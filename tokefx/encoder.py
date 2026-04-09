@@ -263,21 +263,5 @@ def get_embed_attn_in_candidates(
                 "end": -1,
             }
         )
-        continue
-
-        if seq[cand.target_token_idx].form.lower() in processed_tokens:
-            continue
-        enc = tokenizer(seq.text_til_i(cand.target_token_idx), return_tensors="pt")
-        enc = {k: v.to(device) for k, v in enc.items()}
-        in_candidates.append(
-            {
-                "seq": seq,
-                "token": seq[cand.target_token_idx],
-                "model_inp": enc,
-                "src_indices": [-2],
-                "end": -1,
-            }
-        )
-        processed_tokens.add(seq[cand.target_token_idx].form.lower())
     del tokenizer, processed_tokens
     return in_candidates
