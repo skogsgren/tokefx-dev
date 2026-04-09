@@ -1,18 +1,32 @@
-# Tokenization Effects in Multilingual LLMs
+# Detokenization Effects in Multilingual LLMs
 
 ## Quick Start
+Clone the repo:
 
-First download `ud-data`, assuming `$DATA_DIR` stands for where you want to store the data:
+```{bash}
+git clone https://github.com/skogsgren/tokefx-dev
+cd tokefx-dev
+```
+
+Then set up the Python environment, e.g.\
+
+```{bash}
+python3 -m venv /path/to/venv
+source /path/to/venv/bin/activate
+pip3 install -e .
+```
+
+Then download `ud-data`:
 
 ```{bash}
 curl -L -o ud-treebanks.zip \
   "https://lindat.mff.cuni.cz/repository/server/api/core/items/b4fcb1e0-f4b2-4939-80f5-baeafda9e5c0/allzip?handleId=11234/1-6036"
-mkdir -p "$DATA_DIR"
-unzip ud-treebanks.zip -d "$DATA_DIR"
+mkdir -p ./data
+unzip ud-treebanks.zip -d ./data
 rm ud-treebanks.zip
 ```
 
-Then you can edit the `/configs/debug_config.toml` and edit the directories to what you want. The `ud_base` directory would be `$DATA_DIR` in the stated commands, i.e.\ the folder with folders like:
+Then you either directly edit the config files directly to point `ud_base` to the correct path, or set the environment variable `$MIMER_DIR` to the `realpath` of the parent of the cloned `tokefx-dev`, and then making sure there's a subfolder called `data/UD_PUD` containing all the language specific folders. In other words `./tokefx-dev/data` should contain:
 
 ```
 data/
@@ -32,22 +46,17 @@ data/
     ...
 ```
 
-Clone the repo:
+There's a runscript at [`/scripts/run`](/scripts/run) which acts as a pipeline wrapper. To run the `toksuite` experiments as they appear in the thesis you would run it like so:
 
-```{bash}
-git clone https://github.com/skogsgren/tokefx-dev
-cd tokefx-dev
+```
+./scripts/run configs/toksuite_config.toml
 ```
 
-Then set up the Python environment, e.g.\
+**NOTE:** the `toksuite` experiment run expects access to the [Aya model](https://huggingface.co/CohereLabs/aya-expanse-8b), which requires terms and conditions to be accepted and `HFTOKEN` to be set.
 
-```{bash}
-python3 -m venv /path/to/venv
-source /path/to/venv/bin/activate
-pip3 install -e .
-```
+## Individual Experiments
 
-To run experiments see the [`/scripts`](/scripts) folder. For example, to run attention analyses using the debug configuration (which runs fine on low-powered non-CUDA machines, using Qwen 0.6B):
+To run individual experiments see the [`/scripts`](/scripts) folder. For example, to run attention analyses using the debug configuration:
 
 ```{bash}
 python3 scripts/attention.py configs/debug_config.toml
