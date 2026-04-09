@@ -261,6 +261,7 @@ def create_embed_candidates(
             if tform in processed_tokens:
                 continue
             res = analyzer(cand)
+            embed_row = None
             for row in res:
                 if row["component"] == "input_emb":
                     embed_row = row
