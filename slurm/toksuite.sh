@@ -21,7 +21,5 @@ source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
 echo "$(date) starting evaluation for toksuite models"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-python3 scripts/attention.py configs/toksuite_config.toml
-python3 scripts/lahis.py configs/toksuite_config.toml
-python3 scripts/patchscopes.py configs/toksuite_config.toml
+./scripts/run --in_boundary_mode all --ablation_map_type attention_mass configs/toksuite_config.toml
 echo "$(date) finished evaluation for toksuite models"
