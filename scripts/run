@@ -37,7 +37,7 @@ if args.overwrite:
     shutil.rmtree(OUT_DIR)
 if OUT_DIR.exists():
     raise FileExistsError(
-        "output directory {OUT_DIR=} exists but --overwrite is not specified"
+        f"output directory {OUT_DIR=} exists but --overwrite is not specified"
     )
 OUT_DIR.mkdir(parents=True)
 log("STARTING COMPLETE RUN")
@@ -50,7 +50,8 @@ script = scrmap.get(args.ablation_map_type, None)
 if script is None:
     raise ValueError("unknown ablation_map_type")
 subprocess.run(
-    ["python3", script, args.cfg, "--in_boundary_mode", args.in_boundary_mode]
+    ["python3", script, args.cfg, "--in_boundary_mode", args.in_boundary_mode],
+    check=True,
 )
 log("RUNNING ABLATION EXPERIMENTS")
 subprocess.run(
@@ -62,6 +63,7 @@ subprocess.run(
         args.in_boundary_mode,
         "--ablation_map_type",
         args.ablation_map_type,
-    ]
+    ],
+    check=True,
 )
 log("FINISHED COMPLETE RUN")
