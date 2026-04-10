@@ -128,6 +128,9 @@ for model_handle, lang_handle in configurations:
         if i >= BASE_KWARGS["n_rows"]:
             break
         out_candidates.append(cand)
+    assert (
+        len(out_candidates) == BASE_KWARGS["n_rows"]
+    ), f"{len(out_candidates)=}, {model_spec=}, {lang=}"
     del encoder
 
     log("analyzing attention for out_boundary")
@@ -161,6 +164,9 @@ for model_handle, lang_handle in configurations:
         del encoder
     else:
         raise ValueError("unsupported in_boundary_mode {args.in_boundary_mode=}")
+    assert (
+        len(in_candidates) == BASE_KWARGS["n_rows"]
+    ), f"{len(in_candidates)=}, {model_spec=}, {lang=}"
 
     log("analyzing attention for in_boundary")
     in_layer_rows, in_head_rows = analyzer(in_candidates, BASE_KWARGS["n_rows"])
