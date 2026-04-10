@@ -10,11 +10,18 @@
 %     position thesis in relation to literature
 %         research questions
 
+% introduce tokenization
+% introduce autoregressive language models
+% introduce mechanistic interpretability as a field
+%   detokenization
+
 \textbf{Tokenization} is the process of segmentation and representation of our input text for use in corpora and machine learning systems \citep{jm3}. For example, how would we segment `New Orleans,' given that neither `New' or `Orleans' in isolation refers to what we want to say? Another example: If we have `it's' do we split it up, seeing as it's a contraction from `it is?' The list goes on with potential issues and trade-offs between languages. Those are the types of questions and decisions tokenization concerns. In Neural Machine Learning and NLP, we currently most often use \textbf{sub-word tokenization}, utilizing compression algorithms to break text up in something in-between whole words and characters \citep{mielke2021}.
 
-\section{Tokenization Algorithms}
+Different schemes exist, with compression-based algorithms being most common \citet{mielke2021}, though some approaches use byte-level tokenizers that operate directly on raw bytes \citep{xue2022}. The primary motivation for subword tokenization is to mitigate the out-of-vocabulary problems of earlier word-based approaches \citep{mielke2021}. However, this process can produce non-optimal segmentations for low-resource languages which affect downstream performance \citep{ahia2023}, possible non-canonical tokenizations and overly eager splitting when encountering minor typos. Despite this, modern LLMs remain surprisingly robust to typo perturbations \citep{cao2023} and non-canonical tokenizations \citep{gutierrez2023, zheng2026}.
 
-There is no one tokenizer to rule them all. All tokenizers must make assumptions, and inherently lose information during encoding \citep{mielke2021}. What information is lost, and how much, is up to the individual algorithm chosen.
+This chapter will start by describing the different tokenization schemas in Section \ref{sec:tokenschemas}, then go into how the Transformer architecture and the attention mechanism it builds on works in Section \ref{sec:transformers}, and in Section \ref{sec:mechinter} a primer into the field of mechanistic interpretability of modern LLMs and the detokenization hypothesis.
+
+\section{Tokenization Schemas}\label{sec:tokenschemas}
 
 \begin{description}
 
@@ -30,29 +37,45 @@ For byte-level tokenizers, they then replace all bytes of the given string with 
 
 \end{enumerate}
 
-During inference time BPE-style tokenizers are by design greedy, and pick the best compression of a text. \citet{liu2025b} introduced SuperBPE, which uses non-greedy sampling during training to overcome the greedy design. They also run pre-tokenization twice, the second while allowing tokens to cross whitespace. They argue this achieves more robust and performant language models, though in available pre-trained models using such methods is rare.
-
 The byte-level tokenization leads to some unintuitive tokens for languages which represents characters as multiple bytes in UTF-8. For example, for the character `火,' GPT-2 tokenizes it as \texttt{['ç', 'ģ«']}, where neither token maps to anything meaningful to humans. \citet{arnett2025, wegmann2025} show the unequal impact of the pre-tokenization decisions in cross-lingual scenarios, where the pre-tokenization can have a detrimental effect on non-Latin languages or languages heavily utilizing diacritics and non-English punctuation rules.
 
 \item[UniGram]
 A UniGram language model considers the probability of $z|y|x$ without context, i.e.\ $p(z|y|x) = p(x) \times p(y) \times p(z)$. \citet{kudo2018} suggested the utilization of segmentation probability sampling from the UniGram language model. Specifically, in order to act as a regularization method during Neural Machine Translation (NMT) training. At each step in training we compute a loss over the current vocabulary $V$, and then for each symbol in $V$ we compute how much the loss would change if the symbol was removed. We gradually prune the symbols which would increase the least until we reach a desired vocabulary size. In practice, tokenizers utilizing UniGram, such as SentencePiece \citep{sentencepiece}, approximate this process by utilizing Viterbi decoding to get better performance.
 
-Getting a probability distribution is especially useful in multilingual scenarios, where we might not want to make assumptions about what can and can't constitute a token before we train our tokenizer. \citet{sentencepiece} introduces this framework specifically to be deterministic in decoding and encoding for multilingual scenarios. For example, Japanese doesn't utilize whitespace, while English does. In BPE we make such assumptions during the pre-tokenization, in SentencePiece we don't have to. \citet{lin2022} introduced the XLMG suite of models which utilizes SentencePiece with Unigram sampling of $\alpha = 0.3$ to train a multilingual tokenizer from 10 million sentences. However, SentencePiece approaches are not always byte-based, which means unknown tokens are a possibility, depending on the training data. For example, typing an Arabic word ` لغة' \textit{language} into a monolingual English character-based SentencePiece tokenizer, like the tokenizers in \citet{chang2022}, would end up as only unknown tokens.
+Getting a probability distribution is especially useful in multilingual scenarios, where we might not want to make assumptions about what can and can't constitute a token before we train our tokenizer. \citet{sentencepiece} introduces this framework specifically to be deterministic in decoding and encoding for multilingual scenarios. For example, Japanese doesn't utilize whitespace, while English does. In BPE we make such assumptions during the pre-tokenization, in SentencePiece we don't have to. \citet{lin2022} introduced the XLMG suite of models which utilizes SentencePiece with Unigram sampling of $\alpha = 0.3$ to train a multilingual tokenizer from 10 million sentences. However, SentencePiece approaches are not always byte-based, which means unknown tokens are a possibility, depending on the training data. For example, typing an Arabic word `{\arabicfont لغة}' \textit{language} into a monolingual English character-based SentencePiece tokenizer, like the tokenizers in \citet{chang2022}, would end up as \texttt{['<unk>']} (i.e.\ as unknown tokens).
 
-\item[TokenMonster] \citet{forsythe2025} introduces TokenMonster, a wholly ungreedy algorithm for tokenization which utilizes look-ahead to get achieve the optimal tokenization. Unlike BPE it does not assume a picked ``branch'' (i.e.\ a chosen merge during encoding) is beneficial, but that both branches might have been beneficial in the end.
-
-\item[Byte-level Tokenization] Some approaches forego subword tokens all-together, and instead only use a mapping from text to their unicode byte representations \citep{mielke2021}. The By-T5 series of models, introduced by \citet{xue2022}, uses byte tokenization in an attempt to make less assumptions about the input, simplify preprocessing, and help with robustness to unseen tokens. It is similar to the byte-level BPE mapping, but without the regex chunking.
+\item[Byte-level Tokenization] Some approaches forego compression, and instead use a mapping from text to their unicode byte representations \citep{mielke2021}. The By-T5 series of models, introduced by \citet{xue2022}, uses byte tokenization in an attempt to make less assumptions about the input, simplify preprocessing, and help with robustness to unseen tokens. It is similar to the byte-level BPE mapping, but without the regex chunking. For example, the \texttt{By-T5} tokenizer can be replaced wholly by one line of Python code. Let \texttt{text} be a string you want tokenized. 3 denotes the number of reserved special tokens: \texttt{[int(x) + 3 for x in text.encode("utf-8")]}
 
 \end{description}
 
+\section{Large Language Models}\label{sec:transformers}
 
-\section{Large Language Models}
+the transformer architecture introduced by \citet{vaswani2017}, whose central component is the self-attention mechanism. Put simply, self-attention transforms each token representation in an input sequence to encode its relationship to other tokens. In a self-attention layer, three linear projections of an input sequence with dimensionality $d$ produces the \textit{Query}, \textit{Key}, and \textit{Value} vectors. These vectors $Q$, $K$, and $V$ are then used to calculate attention scores:
 
-\citet{vaswani2017} introduced the transformer model, an encoder-decoder model designed around self-attention. This lets the model look at all the tokens in a sequence simultaneously, giving scores to which tokens are most important for each respective token. This makes it easier to process longer range dependencies and linguistic structures dependent on reference disambiguation. see Figure \ref{fig:attref} for an example.
+\begin{equation}\label{eq:attention}
+\text{Att}(Q, K, V) = \text{softmax} \left( \frac{QK^{\top}}{\sqrt{d}} \right) V
+\end{equation}
 
-\input{fig/attref.tex}
+\noindent
+with softmax being defined as
 
-The model is built using layers of Transformer blocks. Let \texttt{MHA} be the Multi-Head self-Attention layer, and \texttt{MLP} be the Feed Forward Network. We then have this general flow through the transformer blocks:
+\begin{equation}\label{eq:softmax}
+\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{k} e^{z_j}}
+\end{equation}
+
+\noindent
+where $z = (z_1, \dots, z_k)$ is a vector of input scores, and as output gives a \textit{non-zero} probability distribution from every token to every token summing to $1$. As noted by \citet{correia2019}, this non-zero forces every token to attend to some degree to every other token in the input sequence, even if the token is not relevant. In decoder-only transformers, training is performed using next-token prediction, where attention scores for tokens occurring after the current token are masked. However, since this probability distribution tends to be dominated by certain tokens, and several tokens can be simultaneously relevant, we typically use \textit{multi-head attention} in practice. This involves applying Equation \ref{eq:attention} many times in parallel, effectively forming several \textit{attention heads} which can attend to distinct parts of the sequence. Each head is calculated as such, where $W_i$ represents the learnable weight matrices for the $i$-th attention head:
+
+\begin{equation}\label{eq:multihead}
+\text{head}_i (Q, K, V) = \text{Att}(QW_i^{Q}, KW_i^{K}, VW_i^{V})
+\end{equation}
+
+% attention-head analysis;
+%   liu2025: language specific attention heads
+%   hanna2023: greater than in gpt2
+
+The parallel multi-head structure allows attention heads to become specialized for specific tasks. \citet{liu2025_language_attention_heads} identify language-specific and language-agnostic attention heads, which enables them to guide the model towards specific languages in generation. \citet{hanna2023} identified a circuit in GPT2 responsible for the `XX greater than YY' relation, and found that at the last token position a few in-circuit attention heads attend primarily to the YY position. They check this using the logit lens approach \citep{nostalgebraist}, which lets them project the attention head to vocabulary space and get output token prediction. It shows one head up-weights the YY token prediction over any other token. \citet{carrasco2024} found a circuit of 8 attention heads responsible for three-letter acronym detection in GPT2, which they tested using activation patching, which involves replacing layer activation values with a corrupted alternative. \citet{voita2019} find that only a small subset of attention heads are crucial for translation performance, as well as identifying \textit{patterns} in attention heads.
+% \citet{elhage2021} creates toy transformer models with single layers to form what is effectively a skip trigram model, with \texttt{if [source] ... [destination] -> [out]} pairs. For example, for a name like `Cindy' that primarily occurs with a space in front tokenized as \texttt{[" Cindy"]}), our tokenizer might split it up when it occurs without a space in front \texttt{["C", "indy"]}. They show specific attention head activations responsible for that mapping, in this example \texttt{[ Cindy] ... [C] -> [indy]}.
 
 \begin{verbatim}
 Input → MHA → Add+LayerNorm → MLP → Add+LayerNorm → Output
