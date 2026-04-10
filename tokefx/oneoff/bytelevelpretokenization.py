@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from icecream import ic
 import regex as re
 from tokenizers.pre_tokenizers import ByteLevel
 from tokenizers import PreTokenizedString

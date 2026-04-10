@@ -11,8 +11,6 @@ from tokefx.benchmarks.xcopa import xcopa
 from tokefx.benchmarks.xnli import xnli
 from tokefx.utils import load_config, read_json, set_json
 
-from icecream import ic
-
 cfg = load_config("scripts/config.toml")
 models = cfg["eval"]["models"]
 
@@ -46,7 +44,7 @@ for model, tokenizer in models:
         )
         belebele_metrics[tokenizer][spec["iso639"]] = belebele_score
         set_json(belebele_out_fp, belebele_metrics)
-        ic(belebele_metrics)
+        print(belebele_metrics)
 
 # == xcopa ==
 xcopa_out_fp = cfg["dir"]["out"] / "benchmark_xcopa_original.json"
@@ -67,7 +65,7 @@ for model, tokenizer in models:
         )
         xcopa_metrics[tokenizer][spec["iso639"]] = xcopa_score
         set_json(xcopa_out_fp, xcopa_metrics)
-        ic(xcopa_metrics)
+        print(xcopa_metrics)
 
 # == xnli ==
 xnli_out_fp = cfg["dir"]["out"] / "benchmark_xnli_original.json"
@@ -88,4 +86,4 @@ for model, tokenizer in models:
         )
         xnli_metrics[tokenizer][spec["iso639"]] = xnli_score
         set_json(xnli_out_fp, xnli_metrics)
-        ic(xnli_metrics)
+        print(xnli_metrics)

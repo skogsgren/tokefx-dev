@@ -7,8 +7,6 @@ import torch
 from tokefx.data import PUDSequence, PUD_Data, PUDCandidate
 from tokefx.data import iter_candidates_jsonl
 
-from icecream import ic
-
 INVALID_PREFIXES = {"’", "-"}
 
 

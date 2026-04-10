@@ -11,8 +11,6 @@ from tokefx.data import PUDSequence, PUDCandidate, PUD_Data, write_candidates_js
 from tokefx.encoder import UDEncoder
 from tokefx.utils import log
 
-from icecream import ic
-
 
 class PatchScopesAnalyzer:
     def __init__(

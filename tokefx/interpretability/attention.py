@@ -11,8 +11,6 @@ import pandas as pd
 
 from tokefx.utils import log
 
-from icecream import ic
-
 
 class AttentionAnalyzer:
     def __init__(

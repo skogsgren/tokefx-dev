@@ -30,8 +30,6 @@ from tokefx.interpretability.patchscopes import (
 from tokefx.plot.lahis import export_head_heatmap
 from tokefx.utils import load_config, log
 
-from icecream import ic
-
 parser = argparse.ArgumentParser()
 parser.add_argument("cfg", type=Path, help="path to config file")
 parser.add_argument(

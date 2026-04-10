@@ -10,8 +10,6 @@ from transformers import AutoModelForCausalLM
 
 from tokefx.data import PUDCandidate
 
-from icecream import ic
-
 
 class LahisAnalyzer:
     def __init__(self, model_spec, device: str = "cpu", **kwargs):

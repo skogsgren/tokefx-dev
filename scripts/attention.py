@@ -25,8 +25,6 @@ from tokefx.data import (
     iter_candidates_jsonl,
 )
 
-from icecream import ic
-
 parser = argparse.ArgumentParser()
 parser.add_argument("cfg", type=Path, help="path to config file")
 parser.add_argument(

@@ -11,8 +11,6 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from icecream import ic
-
 from tokefx.constants import SPECIAL_TOKEN_RULES
 
 
@@ -63,7 +61,7 @@ def xcopa(
             losses = loss(logits, labels).cpu()
             option_loss = torch.sum(losses, dim=-1).item()
             option_losses[mc_i] = option_loss
-        ic(option_losses)
+        print(option_losses)
         pred_i = int(torch.argmin(option_losses).item())
         corr.append(pred_i == corr_i)
     return float(np.mean(np.array(corr)))

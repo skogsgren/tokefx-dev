@@ -21,8 +21,6 @@ from tokefx.interpretability.patchscopes import create_embed_candidates
 from tokefx.plot.patchscopes import main as plot_patchscopes
 from tokefx.utils import load_config, log
 
-from icecream import ic
-
 parser = argparse.ArgumentParser()
 parser.add_argument("cfg", type=Path, help="path to config file")
 parser.add_argument(
