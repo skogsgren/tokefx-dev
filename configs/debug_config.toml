@@ -10,42 +10,19 @@ iso639="eng_Latn"
 pud-conllu="UD_English-PUD/en_pud-ud-test.conllu"
 patchscopes_prompt="Repeat this word: X, X, X,"
 
-# [lang.turkish]
-# iso639="tur_Latn"
-# pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
-# patchscopes_prompt="Bu kelimeyi tekrarla: X, X, X,"
+[lang.turkish]
+iso639="tur_Latn"
+pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
+patchscopes_prompt="Bu kelimeyi tekrarla: X, X, X,"
 
 [lang.chinese]
 iso639="zho_Hans"
 pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
-patchscopes_prompt="重複這個字：X、X、X、"
-
-# [lang.swedish]
-# iso639="swe_Latn"
-# pud-conllu="UD_Swedish-PUD/sv_pud-ud-test.conllu"
-# patchscopes_prompt="Repetera följande ord: X, X, X,"
-
-# [lang.japanese]
-# iso639="jpn_Jpan"
-# pud-conllu="UD_Japanese-PUD/ja_pud-ud-test.conllu"
-
-# [lang.arabic]
-# iso639="arb_Arab"
-# pud-conllu="UD_Arabic-PUD/ar_pud-ud-test.conllu"
+patchscopes_prompt="重复这个词语：X、X、X、"
 
 [eval]
-models=[ # (model, tokenizer) tuples
-    # ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-0.6B"],
-    # ["Qwen/Qwen3-1.7B", "Qwen/Qwen3-1.7B"],
+models=[
     ["toksuite/gpt2", "gpt2"],
-    # ["toksuite/google-byt5-small", "google/byt5-small"],
-    ["toksuite/google-gemma-2-2b", "google/gemma-2-2b"],
-    # ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
-    # ["toksuite/bigscience-bloom", "bigscience/bloom"],
-    # ["toksuite/Qwen-Qwen3-8B", "Qwen/Qwen3-8B"]
-]
-analyses=[
-    "boundary",
 ]
 ablations=[
     "targeted",
@@ -68,6 +45,6 @@ min_tokens_per_candidate=2
 min_context=4
 n_rows=15
 context_window=4096
-ablation_map_rank_by="score_delta"
+ablation_map_rank_by="sum_z"
 ablation_map_max_layer=15
-ablation_map_topk=15
+ablation_map_topk=0.05
