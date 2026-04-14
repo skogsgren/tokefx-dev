@@ -22,8 +22,8 @@ patchscopes_prompt="重复这个词语：X、X、X、"
 
 [eval]
 models=[ # (model, tokenizer) tuples
-    # ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B"],
-    # ["Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-1.5B"],
+    ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B"],
+    ["Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-1.5B"],
     ["Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-3B"],
     ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-7B"],
 ]
@@ -46,7 +46,7 @@ max_tokens_per_sequence=3
 min_bytes_per_token=4
 min_tokens_per_candidate=2
 min_context=4
-n_rows=15
+n_rows=250
 context_window=4096
 ablation_map_rank_by="sum_z"
 ablation_map_max_layer=15
