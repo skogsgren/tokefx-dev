@@ -1,0 +1,243 @@
+\documentclass[11pt]{article}
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setCJKmainfont{FandolSong-Regular.otf}
+
+\usepackage{amsmath}
+\usepackage{comment}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{multirow}
+
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%\setlength\titlebox{<dim>}
+% and set <dim> to something 5cm or larger.
+
+\title{Ain't Detokenization A Kick in The Head? \\ Specialized Attention Heads in Early-Layer Detokenization}
+\author{
+  Gustaf Gren \\
+  Stockholm University \\
+  \texttt{gustaf.gren@ling.su.se}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large language models process text as sequences of subtokens, raising the question of how coherent full representations are formed out of fragmented subtokens during inference. Prior work has hypothesized a \textit{detokenization} stage in early layers, where subtokens are recombined into larger units, but direct intervention-based evidence for the role of specific components remains limited. We investigate whether a 5\% subset of attention heads plays a role in this process. We identify candidate heads based on their preference for within-word attention (based on attention weight and norm) and test their contribution using targeted ablation and activation patching in a word reconstruction task. Across languages (English, Turkish, Chinese), tokenization schemes (BPE, SentencePiece, byte-level), and model families, we find that ablating these heads leads to degradation in reconstruction performance exceeding random ablation. The effect is particularly pronounced in larger models, where retrieval can collapse almost entirely. Our results provide additional evidence for the detokenization hypothesis and suggest that early transformer layers rely on specialized attention heads to construct internal word-level representations from fragmented inputs.
+\end{abstract}
+
+\section{Introduction}
+
+Large language models typically process text as sequences of discrete subtokens rather than whole words \citep{mielke2021}, which can split meaningful units into smaller fragments. In the GPT-2 tokenizer, for example, the name `Hemingway' is represented as \texttt{['H',~'eming',~'way']}. This raises a question regarding how models recover larger semantic units from these fragments, given they show robustness to corruption \citep{cao2023}. One hypothesis, often referred to as \textit{detokenization}, suggests that early layers in the model partially reverse the tokenization process by combining subtokens into more coherent segments \citep{kaplan2025,feucht2024}. Evidence for this idea stems from interpretability work such as \citet{elhage2022a}, which found neurons in early layers that respond strongly to token boundary artifacts. Similar hierarchical patterns appear in computer vision \citep{jastrzebski2018}, with for example \citet{zeiler2014} demonstrating early convolutional layers detecting simple features like edges while deeper layers capture more complex structures.
+
+% \citet{kaplan2025} propose that detokenization involves at least two stages: early-layer attention, which selects relevant subtoken information, and early-to-mid-layer feed-forward networks, which refine this information into a more coherent lexical representation. They further hypothesize that modern decoder LLMs possess an \textit{inner lexicon} or \textit{implicit vocabulary} \citep{feucht2024}, such that detokenization maps subtoken embeddings into internal word/concept-level representations used in later stages of inference.
+
+We investigate whether a small set of attention heads contribute to the formation of internal word-level representations during these early stages during inference. We first identify candidate heads based on their preference for within-word attention, and then test their contribution using targeted ablation and activation patching-based word reconstruction. We evaluate across languages (Chinese, Turkish, and English), multiple tokenization schemes (BPE, SentencePiece, and byte-level), and a range of parameter sizes. We aim to improve the understanding of how tokenization and parameter sizes are reconciled with the construction of internal representations inside LLMs.
+
+The closest related work is \citet{ferrando2024}, who construct information flow graphs over attention heads. They identify early-layer attention heads that attend to the previous token and~---~most relevant to this work~---~heads responsible for merging subtokens. They define a subword-merging head as one where later subtokens attend to earlier subtokens of the same word, excluding the previous-token head. \citet{lad2024} performed similar analyses, identifying heads which show distinct attention patterns for subword merging. Another closely related study is \citet{kamoda2025}, who identify attention heads involved in detokenization through weight-based analysis of GPT-2 models. However, none of the studies examines the effect of these heads and whether ablating them impacts the formation of the internal representation in the model. Additionally, neither study examines whether these patterns generalize across typologically languages and tokenizer architectures.
+
+% Methodologically speaking, \citet{carrasco2024} is similar, where we first identify attention heads, and then use patching mechanisms to investigate causal flow.
+
+\section{Background}
+% introduce tokenization and different schemes
+Modern LLMs represent text using tokenizers to split it into subtokens. Different schemes exist, with compression-based algorithms such as BPE \citep{sennrich2016} and SentencePiece \citep{kudo2018} being common choices, while some approaches instead use byte-level tokenizers that operate directly on raw bytes \citep{xue2022}. The primary motivation for subword tokenization is to mitigate the out-of-vocabulary problems of earlier word-based approaches \citep{mielke2021}. However, this process can produce non-optimal segmentations for low-resource languages which affect downstream performance \citep{ahia2023}, possible non-canonical tokenizations and overly eager splitting when encountering minor typos. Despite this, modern LLMs remain surprisingly robust to typological perturbations \citep{cao2023} and non-canonical tokenizations \citep{gutierrez2023, zheng2026}.
+
+% mechanistic interpretability and layer-wise inference patterns; multilinguality in language models
+This robustness suggests that models reconstruct larger meaningful units from fragmented subtokens during inference, motivating analysis of their internal computations. Mechanistic interpretability studies how computations arise within transformer components, with \citet{lad2024} proposing a hierarchical structure with four stages of inference inside LLMs: \textbf{detokenization}, where subtokens merge into lexical units; \textbf{feature engineering}, which constructs intermediate semantic features; \textbf{prediction ensembling}, where candidate next-token predictions emerge; and \textbf{residual sharpening}, which concentrates probability mass onto a small set of tokens. The detokenization stage, in particular, offers an explanation for the observed robustness by recombining fragmented subtokens into coherent lexical units in the early layers of the model. This stage-based view of inference is consistent with findings that LLM representations exhibit a structured progression across layers, with early and late layers encoding language-specific information and middle layers forming a more language-agnostic conceptual space \citep{wendler2024, conneau2020}.
+
+% introduce transformers and attention
+These layer-wise computations arise from the transformer architecture introduced by \citet{vaswani2017}, whose central component is the self-attention mechanism. Put simply, self-attention transforms each token representation in an input sequence to encode its relationship to other tokens. In a self-attention layer, three linear projections of an input sequence with dimensionality $d$ produce the \textit{Query}, \textit{Key}, and \textit{Value} vectors. These vectors $Q$, $K$, and $V$ are then used to calculate attention scores:
+
+\begin{equation}\label{eq:attention}
+\text{Att}(Q, K, V) = \text{softmax} \left( \frac{QK^{\top}}{\sqrt{d}} \right) V
+\end{equation}
+
+\noindent
+with softmax being defined as
+
+\begin{equation}\label{eq:softmax}
+\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{k} e^{z_j}}
+\end{equation}
+
+\noindent
+where $z = (z_1, \dots, z_k)$ is a vector of input scores. The output is a probability distribution over tokens that sums to 1, assigning non-zero mass to each position.
+% As noted by \citet{correia2019}, this non-zero forces every token to attend to some degree to every other token in the input sequence, even if the token is not relevant.
+In decoder-only transformers, training is performed using next-token prediction, where attention scores for tokens occurring after the current token are masked. However, since this probability distribution tends to be dominated by certain tokens, and several tokens can be simultaneously relevant, we typically use \textit{multi-head attention} in practice. This involves applying Equation \ref{eq:attention} many times in parallel, effectively forming several \textit{attention heads} which can attend to distinct parts of the sequence. Each head is calculated as such, where $W_i$ represents the learnable weight matrices for the $i$-th attention head:
+
+\begin{equation}\label{eq:multihead}
+\text{head}_i (Q, K, V) = \text{Att}(QW_i^{Q}, KW_i^{K}, VW_i^{V})
+\end{equation}
+
+% attention-head analysis;
+%   liu2025: language specific attention heads
+%   hanna2023: greater than in gpt2
+
+The parallel multi-head structure allows attention heads to become specialized for specific tasks. \citet{liu2025_language_attention_heads} identify language-specific and language-agnostic attention heads, which enables them to guide the model towards specific languages during generation. \citet{hanna2023} identify a circuit in GPT2 responsible for the `XX greater than YY' relation, and found that at the last token position a few in-circuit attention heads attend primarily to the YY position.
+% They analyze this using the logit lens approach \citep{nostalgebraist}, which lets them project the attention head to vocabulary space and get output token prediction. It shows one head up-weights the YY token prediction over any other token.
+\citet{carrasco2024} found a circuit of 8 attention heads responsible for three-letter acronym detection in GPT2, which they test using activation patching, which involves replacing layer activation values with a corrupted alternative. \citet{voita2019} find that only a small subset of attention heads are crucial for translation performance, as well as identifying \textit{patterns} in attention heads.
+
+% introduce kaplan's notion of detokenization
+%   attention: elhage, kamoda2025, ferrando2024 and the ones they mention (the ones regarding positional attention heads)
+When discussing detokenization, \citet{lad2024} argue that it functions as a continuation of the embedding process, concatenating nearby tokens. This builds on earlier work showing positional heads mainly attend to the previous token \citep{correia2019, elhage2021}. \citet{elhage2021} creates toy transformer models with single layers to form what is effectively a skip trigram model, with \texttt{if [source] ... [destination] -> [out]} pairs. For example, for a name like `Cindy' that primarily occurs with a space in front tokenized as \texttt{[" Cindy"]}), our tokenizer might split it up when it occurs without a space in front \texttt{["C", "indy"]}. They show specific attention head activations for that mapping, in this example \texttt{[ Cindy] ... [C] -> [indy]}. Extending the identification of subword merging heads by \citet{ferrando2024}, \citet{lad2024} find heads in Pythia 2.8B with consistent attention patterns between the final subtoken of four-token words and a single-token control.
+
+%   ffn; dar2023 (analyzing transformers in embedding space) and geva2021/2022
+\citet{kaplan2025} argue that attention is the earliest component of the detokenization mechanism, marking which elements are used in later stages. Rather than identifying individual heads, they measure mean attention weights across layers between single-token words and inside multi-token words, finding higher weights inside multi-token words. To assemble these attended components into a full internal representation, \citet{kaplan2025} draw on findings that transformer feed-forward networks act as key/value memories encoding factual and linguistic knowledge \citep{geva2021, meng2022}, arguing that models use attention outputs to retrieve full internal representations in early-mid layers.
+
+\section{Data}\label{sec:data}
+% introduce UD Treebanks
+%   mention filtering inside sequences, shuffling, sampling (to keep distribution identical and avoid too large sample sizes since we're calculating significance scores. though unsure about this one?)
+We conduct our analysis on Chinese, English and Turkish using the Universal Dependencies PUD treebanks \citep{nivre2020, akhundjanova2025}, a multilingual corpus derived from Wikipedia and news articles. It contains parallel sentences annotated with syntactic dependencies. The parallel nature of the corpus allows us to compare attention behavior across languages while minimizing domain differences. Throughout the paper, a word corresponds to a syntactic word as annotated in UD, providing a cross-lingually consistent unit without introducing tokenizer-specific assumptions.
+
+To reduce cases where lexical identity trivially carries across languages, we exclude words whose part-of-speech tags correspond to categories that frequently appear unchanged across languages, including punctuation, proper nouns, symbols, and numbers. We also filter tokens that appear before the fourth position in a sequence since early tokens provide limited preceding context and may interact with positional attention patterns unrelated to the phenomenon under investigation (such as the first token acting as an attention sink \citep{xiao2024efficient}). After filtering, sequences are randomly shuffled and we sample 250 unique words along with their preceding context for each language and configuration.
+
+% how is a word defined? in_boundary vs. out_boundary. make the justification as compared to kaplan given chinese.
+%   since previous work has mentioned that the bulk attention mass in the previous token, this limits our analysis window. making analysis in uneven spans would make the analysis uneven.
+A challenge in this analysis is that tokenization efficiency varies substantially across languages and tokenizers. A simple distinction between single-token and multi-token words as used by \citet{kaplan2025} is therefore not comparable cross-lingually nor across tokenizers. For example, in the GPT-2 tokenizer which is not trained on Chinese, there are very few types of single-token Chinese words since the median byte length in the PUD corpus is three for Chinese words. Consequently, a ``single-token word'' in Chinese is not directly comparable to a single-token word in English or Turkish. This effect is further exacerbated in byte-based tokenizers. So, instead of relying on token counts, we define two boundary-based comparison conditions based on \citet{kaplan2025, ferrando2024}. The \textit{in-boundary} condition compares attention from the final subtoken of a word to its penultimate subtoken. The \textit{out-boundary} condition compares attention from the first subtoken of a word to the final subtoken of the preceding word. This framing allows us to contrast attention behavior within a word with attention behavior across word boundaries while remaining tokenization agnostic.
+
+\section{Methodology}
+
+The setup follows the hypothesis proposed by \citet{kaplan2025}. If information about a word's internal structure is propagated through the residual stream, and specific attention heads are involved in aggregating subword units, then such heads should preferentially attend from the final subtoken of a word to preceding subtokens within the same word. Under this hypothesis, attention from the final subtoken to the penultimate subtoken should be stronger than attention that crosses a word boundary. The out-boundary condition serves as a control.
+
+For each layer $l$ and head $h$, we compute the mean attention weight under each condition across all eligible tokens as described in Section~\ref{sec:data}. We then define the attention weight delta as:
+\begin{equation}\label{eq:delta_attn}
+\Delta^{(\text{attn})}_{l,h} = \mu_{l,h}^{(\text{in})} - \mu_{l,h}^{(\text{out})}.
+\end{equation}
+
+However, as noted by \citet{jain2019}, attention weights alone may not reflect a head's \textit{contribution} to downstream representations. Following \citet{kobayashi2020}, we therefore also consider the magnitude of the attention output. Specifically, for each head we extract its output prior to the output projection (i.e.\ before head mixing) and compute its vector norm. We then define the corresponding norm delta:
+\begin{equation}\label{eq:delta_norm}
+\Delta^{(\text{norm})}_{l,h} = \mu_{l,h}^{(|\text{in}|)} - \mu_{l,h}^{(|\text{out}|)}.
+\end{equation}
+
+To identify candidate heads, we calculate a score using the sum of the $z$-normalized norm/weight deltas
+\begin{equation}\label{eq:headscore}
+S_{l,h} = z^{(\text{attn})}_{l,h} + z^{(\text{norm})}_{l,h}
+\end{equation}
+
+% Candidates are then extracted by excluding negative scores, based on our hypothesis that greater attention is assigned to the in-boundary condition than to the out-boundary condition:
+% \begin{equation}\label{eq:headcand}
+% \mathcal{H}_{\text{cand}} = {(l,h) \mid S_{l,h} > 0}
+% \end{equation}
+
+% introduce TokSuite models
+%   talk a little bit about llama architecture; rmsnorm, group key attention vs. regular attention
+% introduce the tokenizers chosen
+%
+% should probably add a bit more detail about the training for the TokSuite models
+
+\input{tab/fertility.tex}
+
+We evaluate these patterns using the TokSuite models \citep{altintas2025}, a family of 1B Llama-2–style models trained on the same number of tokens across five languages: 40B tokens for English and 15B tokens each for Turkish, Chinese, Italian, and Farsi. The models share the same architecture and distribution of training data; the only difference is the tokenizer and the \textit{amount} of training data in GB (since 15B tokens in one tokenizer is not the same as for another). For our experiments we select tokenizers representing common and distinct design choices. The GPT-2 tokenizer is chosen to provide a BPE-style tokenizer which is primarily English-centric \citep{gpt2}. For BPE we also include the Aya tokenizer, which is explicitly multilingual though using GPT-2 style pretokenization \citep{aya}. To represent SentencePiece tokenizers with Unigram sampling, we include the multilingually trained XGLM-564M tokenizer \citep{xglm}, which possesses a byte-fallback. We use the ByT5 tokenizer to represent byte-level tokenization \citep{xue2022}. To examine whether the observed behavior scales with parameter size, we analyze Qwen2.5 models \citep{qwen2.5, qwen2} spanning 0.5B to 7B parameters, with support for 29 languages. We present the bytes per token (BPT), $BPT = \frac{\text{tokens}}{\text{bytes}}$, for each tokenizer in Table~\ref{tab:fertility}.
+
+To evaluate whether the candidate attention heads contribute to representations that support word reconstruction, we utilize a combination of ablation and the Patchscopes \citep{ghandeharioun2024} activation patching technique. Patchscopes probe hidden representations by extracting a hidden state from a source forward pass at a given layer and token position, and inserting it into a separate forward pass on a target prompt designed to elicit specific information from the intermediary representation. Following \citet{kaplan2025}, we formulate this as a word retrieval task: taking a multi-token word along with its previous context, we attempt to recreate the full word from the last token representation. We use the prompt \texttt{"Repeat the following word: X, X, X,"} where \texttt{X} is replaced by the intermediary representation. The  prompt was translated by native speakers to Chinese\footnote{\texttt{重复这个词语：X、X、X、}} and Turkish\footnote{\texttt{Bu kelimeyi tekrarla: X, X, X,}}. If detokenization occurs, retrieval accuracy should be higher in the lower layers, as the model is attempting to recreate the full word representation according to the detokenization hypothesis. If the hypothesis is correct that specific attention heads are responsible for the mechanism, as well as the model having distinct stages of inference, we should see that the model fails to correct retrieval at later stages at targeted ablation, while random ablation should not significantly impact retrieval performance.
+
+\input{fig/toksuite_layerwise_pooled.tex}
+\input{fig/qwen_layerwise_pooled.tex}
+
+We capture three types of conditions for our Patchscope runs: (i) a clean forward pass with no ablation, (ii) a targeted ablation that removes the top 5\% highest-scoring attention heads (scored using Equation \ref{eq:headscore}, and (iii) a control condition in which an equal number of heads from the same layers are randomly ablated. We limit ablation to 50\% of the heads in a layer, seeing as otherwise we would be unable to form our random ablation condition. Candidate heads are identified separately for each model-language combination. We then apply Patchscopes to each condition and evaluate retrieval performance on the resulting outputs. We only attempt to reconstruct from the hidden layer output, and not also the FFN as hypothesized by \citet{kaplan2025}, due to computational constraints.
+
+\section{Results}
+
+Across models, languages, and tokenizers, targeted ablation consistently leads to larger performance degradation than random ablation. Random ablation produces only minor reductions in cumulative word retrieval ($\leq 0.04$), whereas targeted ablation often results in larger drops (up to $0.78$).
+
+\subsection{\texttt{Toksuite} models}
+
+For the \texttt{Toksuite} models, the magnitude of the targeted ablation effect varies by language and tokenizer. The strongest effect is observed for English with the \texttt{XGLM} tokenizer, where cumulative retrieval drops by 0.5 within the first 25\% of layers. Although performance partially recovers in later layers, it remains 0.3 below the clean baseline at the final layer.
+
+In contrast, targeted ablation has minimal effect in Chinese for certain tokenizers. For the \texttt{ByT5} tokenizer, no additional degradation is observed under targeted ablation, although the clean baseline is already low. Similarly, the \texttt{gpt2} tokenizer shows only a small drop (0.04) in Chinese, substantially less than other tokenizer/language combinations.
+
+Averaged across \texttt{Toksuite} models, retrieval performance is highest for English, lower for Turkish, and lowest for Chinese. In Chinese, most tokenizers perform similarly, with the exception of \texttt{ByT5}, which deviates from this trend.
+
+Layerwise cumulative retrieval curves show that retrieval accumulates primarily in early-to-middle layers, presented in Table~\ref{fig:toksuite_layerwise_pooled}. This is further reflected in the per-layer retrieval rate, which peaks around the early–mid portion of the network ($\approx 25\%$ depth) and declines sharply thereafter, replicating findings from \citet{kaplan2025}. Under targeted ablation, this peak is consistently delayed and/or reduced in magnitude. Figure~\ref{fig:toksuite_rr} presents retrieval rates pooled across languages.
+
+\input{tab/toksuite_summary.tex}
+\input{fig/toksuite_rr.tex}
+
+\subsection{Qwen2.5 models}
+
+The \texttt{Qwen2.5} models exhibit a qualitatively different pattern. Here, targeted ablation is catastrophic: cumulative retrieval is nearly eliminated across all configurations, with final values not exceeding 0.09. For instance, in the 7B model, retrieval drops from 0.79 to 0.01 under targeted ablation.
+
+Random ablation has a larger effect in these models than in \texttt{Toksuite}, but remains weaker than targeted ablation. The highest random ablation impact is for the 1.5B model (English), where random ablation reduces retrieval by 0.26 as compared to a 0.69 reduction under targeted ablation.
+
+Across all \texttt{Qwen2.5} models, English consistently outperforms Turkish and Chinese, which show similar performance levels.
+
+Layerwise analysis reveals that the 7B and 3B models exhibit early peaks in retrieval rate, while the 1.5B model distributes retrieval more evenly across layers. The pooled layerwise analysis is available in Figure~\ref{fig:qwen_layerwise_pooled}. The 0.5B model shows neither strong retrieval nor a clear peak. Retrieval rate curves are shown in Figure~\ref{fig:qwen_rr}.
+
+\input{tab/qwen_summary.tex}
+\input{fig/qwen_rr.tex}
+
+\section{Discussion}
+\label{sec:discussion}
+
+The general pattern across experiments is that targeted ablation has a disproportionately large impact on word retrieval compared to random ablation. In extreme cases, such as the \texttt{Qwen2.5} 7B model, retrieval collapses from 0.79 to 0.01 under targeted ablation, while random ablation produces negligible change. This aligns with findings by \citet{voita2019}, suggesting that a small subset of attention heads plays a specialized and critical role. In our setting, these heads appear to be responsible for reconstructing word-level representations, particularly in early-to-middle layers, supporting the detokenization hypothesis.
+
+The weak performance of \texttt{ByT5} and the relative robustness of the \texttt{gpt2} tokenizer, especially for Chinese, suggest that tokenizer design and training dynamics play a central role. One plausible explanation is insufficient effective training. Because \texttt{Toksuite} models are trained on a fixed number of tokens, tokenizers with lower compression rates (e.g., \texttt{ByT5} at 1.0 bytes/token and \texttt{gpt2} at 1.36) expose the model to less raw textual data. This may lead to undertrained embeddings and attention components.
+
+In such cases, the model may rely on more distributed mechanisms for representing word-internal structure, rather than concentrating this functionality in specific attention heads. This interpretation is supported by attention heatmaps for Chinese with the \texttt{gpt2} tokenizer (Appendix~\ref{sec:appendix_heatmap}), where the distinction between in-boundary and out-boundary attention patterns are less pronounced and different in distribution than in English. This reduced specialization may also interact with byte-level artifacts, such as the \textit{``ghost token''} effects described by \citet{jang2025}, particularly given how \texttt{gpt2} pretokenization decomposes Chinese characters. These findings are consistent with prior work showing that pre-tokenization choices strongly influence downstream behavior \citep{wegmann2025, arnett2025}.
+
+But while tokenization efficiency (in bytes per token) may influence effective training data size for the \texttt{Toksuite} models, it does not fully explain performance differences. Notably, the \texttt{xglm} tokenizer achieves substantially higher retrieval in English than the \texttt{gpt2} tokenizer (+0.34), despite being less efficient in compression (Table~\ref{tab:fertility}). This indicates that factors beyond compression, potentially including tokenizer architecture (e.g., UniGram vs. BPE) and the effect it has on pre-embedding language modeling, may contribute to the formation of robust intermediate representations. However, given that only one UniGram-based model is included, this remains speculative and warrants further investigation.
+
+Regarding parameter size, we find that larger models exhibit both stronger baseline retrieval performance and greater vulnerability to targeted ablation. For instance, the \texttt{Qwen2.5} 7B model attains a high clean retrieval score (0.81) but almost completely fails when specific components are ablated. Compared to smaller models, the 3B and 7B variants also display a distinct pattern: retrieval performance rises early but then drops off sharply, whereas smaller models decline more gradually after the peak. This pattern suggests that as models scale, they depend more on specialized components and discrete stages of inference rather than on broadly distributed representations or computations.
+
+% The increase in the effect of the random ablation in the \texttt{Qwen2.5} models indicates that 5\% ablation could be too big for that model family.
+
+\section{Conclusion}
+
+This study provides evidence that a small subset of attention heads plays a role in reconstructing word-level representations from subtokens in large language models. By combining attention-pattern-based identification with targeted ablation and activation patching, we show that disrupting these heads leads to substantial degradation in word retrieval performance, exceeding the effects of random ablation. This supports the hypothesis that detokenization is not merely an emergent byproduct of distributed processing, but instead uses specialized components within the attention mechanism. Our results show that this behavior is mostly consistent across languages, tokenization schemes, and model families, though its strength varies depending on tokenizer design, and model scale. In particular, larger models exhibit both stronger baseline reconstruction ability and greater dependence on these specialized heads, suggesting an increased reliance on modular internal mechanisms as scale grows.
+
+Future work could look into expanding the analysis for more languages, and adding more granular comparisons between tokenizer architectures.
+
+\section*{Limitations}
+
+The \texttt{Toksuite} models were trained on a fixed token length, which makes comparison between very uneven tokenizers unfair. However, given the benefits of identical architecture, and training data makeup, this trade-off was deemed acceptable. Llama and Qwen based models use \textit{grouped query attention} \citep{ainslie2023}, where each head shares key/value vectors within a group. While this speeds up inference, it can potentially lead to information smudging between heads given they share components, though it is hard to measure and if anything would lead to \textit{worse} results in the context of this study.
+
+% mention attention mass to previous token
+% mention rmsnorm; gqa
+% Another difference is the use of RMSNorm
+
+\bibliography{references}
+
+\appendix
+\onecolumn
+\begin{comment}
+\section{Parallel Universal Dependencies Data Breakdown}
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+& Sequences & Tokens & Multi-token words & Non-space words\\
+\midrule
+English & 1000 & 21051 & 129 & 2621 \\
+Chinese & 1000 & 21415 & 0 & 20322 \\
+Turkish & 1000 & 16535 & 346 & 2179 \\
+\bottomrule
+\end{tabular}
+\caption{Data breakdown; Multi-token words include UD-words like `it's', `that's', `city's'}
+\end{table}
+\end{comment}
+
+\section{By-Language Cumulative Retrieval Plots}\label{sec:appendix_layerwise}
+\input{fig/toksuite_layerwise.tex}
+\input{fig/qwen_layerwise.tex}
+
+\clearpage
+\section{\texttt{toksuite/gpt2} Attention Heatmap}\label{sec:appendix_heatmap}
+\input{fig/gpt2_heatmap.tex}
+
+\end{document}

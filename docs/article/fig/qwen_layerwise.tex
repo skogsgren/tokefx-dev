@@ -1,0 +1,27 @@
+\begin{figure}[ht]
+\centering
+
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_chinese.pdf}
+    \caption{Chinese}
+    \label{fig:qwen_layerwise_zh}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_english.pdf}
+    \caption{English}
+    \label{fig:qwen_layerwise_en}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_turkish.pdf}
+    \caption{Turkish}
+    \label{fig:qwen_layerwise_tr}
+\end{subfigure}
+
+\caption{Layerwise retrieval dynamics across languages (\texttt{Qwen2.5}): \subref{fig:layerwise_zh} Chinese, \subref{fig:layerwise_en} English, and \subref{fig:layerwise_tr} Turkish. Top: cumulative first retrieval (clean). Bottom: change under targeted ablation relative to clean; negative values indicate delayed or suppressed retrieval. Dashed gray curve and shaded band denote the median and interquartile range of the random-ablation effect.}
+\label{fig:qwen_layerwise_lang}
+\end{figure}
