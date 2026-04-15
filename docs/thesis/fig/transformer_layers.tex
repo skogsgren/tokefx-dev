@@ -1,0 +1,61 @@
+\begin{figure}
+\centering
+\begin{tikzpicture}[
+    >=Latex,
+    node distance=0.2cm,
+    every node/.style={font=\footnotesize},
+    box/.style={
+        draw,
+        rounded corners,
+        minimum height=1.1cm,
+        minimum width=1.7cm,
+        align=center,
+        fill=green!10
+    },
+    block/.style={
+        draw,
+        rounded corners,
+        minimum height=1.3cm,
+        minimum width=1.7cm,
+        align=center,
+        fill=blue!10
+    },
+    norm/.style={
+        draw,
+        rounded corners,
+        minimum height=1.3cm,
+        minimum width=1.3cm,
+        fill=gray!15,
+        align=center
+    },
+    io/.style={
+        draw,
+        rounded corners,
+        minimum height=1.1cm,
+        minimum width=1.7cm,
+        align=center
+    }
+]
+
+% Nodes
+\node[io] (input) {Input tokens \\ $x_1, x_2, \dots, x_t$};
+
+\node[box, right=of input] (embed) {Token+position \\ embedding};
+
+\node[block, right=of embed] (stack) {Transformer \\ blocks};
+
+\node[norm, right=of stack] (norm) {Norm};
+
+\node[block, right=of norm] (linear) {Linear \\ (to vocab)};
+
+\node[io, right=of linear] (output) {Next-token \\ distribution \\ $p(x_{t+1}\mid x_{\le t})$};
+
+\draw[->, thick] (input) -- (embed);
+\draw[->, thick] (embed) -- (stack);
+\draw[->, thick] (stack) -- (norm);
+\draw[->, thick] (norm) -- (linear);
+\draw[->, thick] (linear) -- (output);
+\end{tikzpicture}
+\caption{High-level overview of a decoder-only transformer. The transformer block is shown in detail in Figure~\ref{fig:transformer_block}.}
+\label{fig:transformer_layers}
+\end{figure}

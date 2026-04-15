@@ -1,0 +1,73 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    font=\sffamily,
+    >={Latex[length=3mm]},
+    block/.style={
+        draw,
+        rounded corners,
+        minimum width=4.2cm,
+        minimum height=0.9cm,
+        fill=blue!10,
+        align=center
+    },
+    norm/.style={
+        draw,
+        rounded corners,
+        minimum width=4.2cm,
+        minimum height=0.9cm,
+        fill=gray!15,
+        align=center
+    },
+    smallblock/.style={
+        draw,
+        rounded corners,
+        minimum width=2.2cm,
+        minimum height=0.8cm,
+        align=center
+    },
+    add/.style={
+        draw,
+        circle,
+        fill=green!10,
+        minimum size=7mm,
+        inner sep=0pt
+    },
+    every node/.style={font=\small}
+]
+
+% Nodes
+\node[smallblock] (input) {\textbf{Input $x$}};
+
+\node[norm, above=0.8cm of input] (ln1) {LayerNorm};
+\node[block, above=0.5cm of ln1] (msa) {Masked Multi-Head\\Self-Attention};
+
+\node[add, above=0.5cm of msa] (add1) {$+$};
+
+\node[norm, above=0.5cm of add1] (ln2) {LayerNorm};
+\node[block, above=0.5cm of ln2] (mlp) {Feed-Forward Network\\(MLP)};
+
+\node[add, above=0.5cm of mlp] (add2) {$+$};
+
+\node[smallblock, above=0.8cm of add2] (output) {\textbf{Output}};
+
+% Main vertical path
+\draw[->] (input) -- (ln1);
+\draw[->] (ln1) -- (msa);
+\draw[->] (msa) -- (add1);
+\draw[->] (add1) -- (ln2);
+\draw[->] (ln2) -- (mlp);
+\draw[->] (mlp) -- (add2);
+\draw[->] (add2) -- (output);
+
+% Residual 1
+\coordinate[left=2.8cm of input] (res1left);
+\draw[->] (input.west) -- ++(-2,0) |- (add1.west);
+
+% Residual 2
+\draw[->] (add1.west) -- ++(-2,0) |- (add2.west);
+
+\end{tikzpicture}
+\caption{Decoder-only transformer block.}
+\label{fig:transformer_block}
+\end{figure}
