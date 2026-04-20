@@ -33,6 +33,11 @@
         minimum size=7mm,
         inner sep=0pt
     },
+    residual/.style={
+        ->,
+        line width=2pt,
+        draw=red!60!orange
+    },
     every node/.style={font=\small}
 ]
 
@@ -60,14 +65,13 @@
 \draw[->] (mlp) -- (add2);
 \draw[->] (add2) -- (output);
 
-% Residual 1
 \coordinate[left=2.8cm of input] (res1left);
-\draw[->] (input.west) -- ++(-2,0) |- (add1.west);
-
+% Residual 1
+\draw[residual] (input.west) -- ++(-2,0) |- (add1.west);
 % Residual 2
-\draw[->] (add1.west) -- ++(-2,0) |- (add2.west);
+\draw[residual] (add1.west) -- ++(-2,0) |- (add2.west);
 
 \end{tikzpicture}
-\caption{Decoder-only transformer block.}
+\caption{Decoder-only transformer block. Residual stream in red.}
 \label{fig:transformer_block}
 \end{figure}
