@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Language} & \textbf{Model} & \textbf{Clean $\uparrow$} & \textbf{Targeted $\Delta$} & \textbf{Random $\Delta$} \\
+\midrule
+\multirow{4}{*}{Chinese} & Qwen2.5-7B & 0.25 & -0.20 & -0.06 \\
+ & Qwen2.5-1.5B & 0.21 & -0.18 & -0.03 \\
+ & Qwen2.5-3B & 0.13 & -0.10 & 0.02 \\
+ & Qwen2.5-0.5B & 0.11 & -0.09 & -0.00 \\
+\addlinespace
+\multirow{4}{*}{English} & Qwen2.5-7B & 0.79 & -0.78 & -0.01 \\
+ & Qwen2.5-1.5B & 0.71 & -0.69 & -0.26 \\
+ & Qwen2.5-3B & 0.65 & -0.56 & -0.10 \\
+ & Qwen2.5-0.5B & 0.12 & -0.11 & 0.01 \\
+\addlinespace
+\multirow{4}{*}{Turkish} & Qwen2.5-7B & 0.28 & -0.27 & -0.04 \\
+ & Qwen2.5-3B & 0.17 & -0.15 & 0.00 \\
+ & Qwen2.5-1.5B & 0.10 & -0.08 & -0.06 \\
+ & Qwen2.5-0.5B & 0.01 & -0.01 & 0.00 \\
+\bottomrule
+\end{tabular}
+\caption[Final layer retrieval for Qwen2.5 models]{Summary of final-layer retrieval by language and model. Clean is the cumulative first-retrieval rate at the final relative layer. Targeted and random deltas are measured relative to the clean condition; more negative values indicate stronger disruption.}
+\label{tab:qwen_layerwise_summary}
+\end{table*}
+

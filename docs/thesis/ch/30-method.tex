@@ -1,114 +1,52 @@
 \chapter{Method} \label{cha:method}
+% research design: describe your overall research strategy, exploratory, comparative, experimental, state rationale
+% data collection: dataset name, citation, version, size, characteristics
+% experimental setup
+% analysis methods: quantiative metrics; statistical methods or tests; qualitative or error analysis
+% ethical considerations
 
-The \textbf{Method} chapter addresses the question: \textit{How was the study carried out?} It explains in detail your research strategy, data, tools, and procedures. The description should be clear and systematic so that another researcher, given the same resources, could replicate your study.
+This is an ablation study carried out in two stages: \textit{identification}, where attention heads are identified; and \textit{ablation} where the vectors of those attention heads outputs are intentionally set to 0 and compared to a clean run baseline and random ablation conditions. The structure of this section is as follows: Section \ref{sec:data} starts with describing the dataset used, as well as how it was preprocessed and filtered. Section \ref{sec:identification} goes through the identification of attention heads and the Section \ref{sec:ablation} the ablation methodology.
 
-The chapter also provides the foundation for evaluating the validity, reliability, and ethical integrity of your research. It should be detailed, transparent, and logically structured—ideally broken into subsections.
+\section{Data}\label{sec:data}
 
-\subsection*{Typical Structure}
+We conduct our analysis on Chinese, English and Turkish using the Universal Dependencies PUD (UD-PUD) treebanks \citep{nivre2020, akhundjanova2025}, a multilingual corpus derived from Wikipedia and news articles. The data breakdown is presented in Table~\ref{tab:databreakdown}. UD-PUD contains parallel sentences annotated with syntactic dependencies. The parallel nature of the corpus allows us to compare attention behavior across languages while minimizing domain differences. Throughout the thesis, a word corresponds to a syntactic word as annotated in UD, providing a cross-lingually consistent unit without introducing tokenizer-specific assumptions.
 
-Depending on your thesis design (e.g., experimental, corpus-based, model development, or case study), you may adapt the headings, but the following structure is widely applicable in theses:
+\input{tab/databreakdown.tex}
 
-\begin{enumerate}
-  \item \textbf{Research Design} \\
-  Briefly describe your overall research strategy. Is your study exploratory, comparative, experimental, corpus-analytic, or mixed-methods? State the rationale behind this choice.
+To reduce cases where lexical identity trivially carries across languages, we exclude words whose part-of-speech tags correspond to categories that frequently appear unchanged across languages, including punctuation, proper nouns, symbols, and numbers. We also filter tokens that appear before the fourth position in a sequence since early tokens provide limited preceding context and may interact with positional attention patterns unrelated to the phenomenon under investigation (such as the first token acting as an attention sink \citep{xiao2024efficient}). After filtering, sequences are randomly shuffled and we sample 250 unique words along with their preceding context for each language and configuration.
 
-  \item \textbf{Data Collection} \\
-  Explain how your data was obtained. If you collected your own data (e.g., via annotation, scraping, or crowdsourcing), describe the process in detail: sampling criteria, tools used, preprocessing steps, etc. \\
-  If you used secondary data (e.g., an existing corpus or dataset), give a concise but precise description, including:
-  \begin{itemize}
-    \item Name of the dataset or corpus
-    \item Source or citation
-    \item Version and size (e.g., number of tokens, sentences, or files)
-    \item Relevant characteristics (language(s), genre, domain, etc.)
-    \item Any filtering or subsetting applied
-  \end{itemize}
-  Include proper citations and, if required, licenses for publicly available corpora such as those from the Universal Dependencies project, Hugging Face, ELRA, or similar.
+% how is a word defined? in_boundary vs. out_boundary. make the justification as compared to kaplan given chinese.
+%   since previous work has mentioned that the bulk attention mass in the previous token, this limits our analysis window. making analysis in uneven spans would make the analysis uneven.
+A challenge in this analysis is that tokenization efficiency varies substantially across languages and tokenizers. A simple distinction between single-token and multi-token words as used by \citet{kaplan2025} is therefore not comparable cross-lingually nor across tokenizers. For example, in the GPT-2 tokenizer which is not trained on Chinese, there are very few types of single-token Chinese words since the median byte length in the PUD corpus is three for Chinese words. Consequently, a ``single-token word'' in Chinese is not directly comparable to a single-token word in English or Turkish. This effect is further exacerbated in byte-based tokenizers. So, instead of relying on token counts, we define two boundary-based comparison conditions based on \citet{kaplan2025, ferrando2024informationflow}. The \textit{in-boundary} condition compares attention from the final subtoken of a word to its penultimate subtoken. The \textit{out-boundary} condition compares attention from the first subtoken of a word to the final subtoken of the preceding word. This framing allows us to contrast attention behavior within a word with attention behavior across word boundaries while remaining tokenization agnostic.
 
-  \item \textbf{Experimental Setup or System Description} \\
-  If your study includes training or evaluating models, describe:
-  \begin{itemize}
-    \item The models or tools used (e.g., BERT \cite{devlin2019bert}, spaCy, UDPipe, Fairseq)
-    \item Hyperparameters, configuration details, and evaluation setup
-    \item Software libraries and versions (e.g., Python, PyTorch, Hugging Face Transformers)
-    \item Infrastructure (e.g., local machine, cloud computing, GPU specifications)
-  \end{itemize}
-  For annotation tasks, describe the guidelines, annotators, and inter-annotator agreement if applicable.
+\section{Identification}\label{sec:identification}
 
-  \item \textbf{Analysis Methods} \\
-  Explain how your data was analyzed to answer your research aim. This may include:
-  \begin{itemize}
-    \item Quantitative metrics (e.g., precision, recall, F1-score, BLEU, UAS/LAS)
-    \item Statistical methods or tests (e.g., t-tests, chi-square, correlation)
-    \item Qualitative or error analysis
-  \end{itemize}
-  Provide reasoning for why you chose particular methods or metrics, and mention any limitations.
+The setup follows the hypothesis proposed by \citet{kaplan2025, ferrando2024informationflow}. If information about a word's internal structure is propagated through the residual stream, and specific attention heads are involved in aggregating subword units, then such heads should preferentially attend from the final subtoken of a word to preceding subtokens within the same word. Under this hypothesis, attention from the final subtoken to the penultimate subtoken should be stronger than attention that crosses a word boundary. The out-boundary condition serves as a control.
 
-  \item \textbf{Ethical Considerations} \\
-  If your study involved human participants (e.g., annotators, survey respondents, or interviewees), describe:
-  \begin{itemize}
-    \item How participants were informed
-    \item How consent was obtained
-    \item How anonymity and data protection were ensured
-    \item Whether ethical approval was required and obtained
-  \end{itemize}
-  Refer to institutional policies and national guidelines, such as:
-  \begin{itemize}
-    \item Stockholm University’s research integrity and ethics policy \\\cite{suethics2021} and
-    \item Good Research Practice 2024 \cite{vr2024ethics}.
-\end{itemize}
-  \item \textbf{Appendices} \\
-  Include three appendices to document key aspects of the work: (1) a signed consent form by the author(s) of the thesis, (2) a statement on the usage and sharing of code and data, and (3) a declaration of the use of AI tools such as ChatGPT, detailing their purpose and extent of use in the thesis.
-  
-\end{enumerate}
+For each layer $l$ and head $h$, we compute the mean attention weight under each condition across all eligible tokens as described in Section~\ref{sec:data}. We then define the attention weight delta as:
+\begin{equation}\label{eq:delta_attn}
+\Delta^{(\text{attn})}_{l,h} = \mu_{l,h}^{(\text{in})} - \mu_{l,h}^{(\text{out})}.
+\end{equation}
 
-\subsection*{Best Practices}
+However, as noted by \citet{jain2019, serrano2019}, attention weights alone may not reflect a head's \textit{contribution} to downstream representations. Following \citet{kobayashi2020}, we therefore also consider the magnitude of the attention output. Specifically, for each head we extract its output prior to the output projection (i.e.\ before head mixing) and compute its vector norm. We then define the corresponding norm delta:
+\begin{equation}\label{eq:delta_norm}
+\Delta^{(\text{norm})}_{l,h} = \mu_{l,h}^{(|\text{in}|)} - \mu_{l,h}^{(|\text{out}|)}.
+\end{equation}
 
-\begin{itemize}
-  \item Use figures or tables to summarize datasets, system configurations, or workflows, see e.g. Figure \ref{fig:methods} or Figure \ref{fig:method_pipeline} below.
+To identify candidate heads, we calculate a score using the sum of the $z$-normalized norm/weight deltas
+\begin{equation}\label{eq:headscore}
+S_{l,h} = z^{(\text{attn})}_{l,h} + z^{(\text{norm})}_{l,h}
+\end{equation}
 
-\begin{figure} [h]
-    \centering
-    \includegraphics[scale = 0.18]{fig/methods.png}
-    \caption{Research Strategies and Research Methods (Thesis compendium by the Department of Computer System and Sciences, Stockholm University, retrieved May 20, 2025)}
-    \label{fig:methods}
-\end{figure}
+\section{Ablation}\label{sec:ablation}
 
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+We evaluate these patterns using the TokSuite models \citep{altintas2025}, a family of 1B Llama-2–style models trained on the same number of tokens across five languages: 40B tokens for English and 15B tokens each for Turkish, Chinese, Italian, and Farsi. The models share the same architecture and distribution of training data; the only difference is the tokenizer and the \textit{amount} of training data in GB (since 15B tokens in one tokenizer is not the same as for another). For our experiments we select tokenizers representing common and distinct design choices. The GPT-2 tokenizer is chosen to provide a BPE-style tokenizer which is primarily English-centric \citep{radford2019}. For BPE we also include the Aya tokenizer, which is explicitly multilingual though using GPT-2 style pretokenization \citep{aya}. To represent SentencePiece tokenizers with Unigram sampling, we include the multilingually trained XGLM-564M tokenizer \citep{xglm}, which possesses a byte-fallback. We use the ByT5 tokenizer to represent byte-level tokenization \citep{xue2022}. To examine whether the observed behavior scales with parameter size, we analyze Qwen2.5 models \citep{qwen2.5, qwen2} spanning 0.5B to 7B parameters, with support for 29 languages. We present the bytes per token (BPT), $BPT = \frac{\text{tokens}}{\text{bytes}}$, for each tokenizer in Table~\ref{tab:fertility}.
 
-\tikzstyle{process} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=gray!10]
-\tikzstyle{arrow} = [thick,->,>=stealth]
+\input{tab/fertility.tex}
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[node distance=1.5cm and 2cm]
+To evaluate whether the candidate attention heads contribute to representations that support word reconstruction, we test using \textit{zero-ablation} as introduced by \citet{michel2019}. Zero-ablation is where we remove candidate attention heads by setting their output to zero. To test the effect, we use the Patchscopes \citep{ghandeharioun2024} activation patching \citep{vig2020} technique. Patchscopes probe hidden representations by extracting a hidden state from a source forward pass at a given layer and token position, and inserting it into a separate forward pass on a target prompt designed to elicit specific information from the intermediary representation. Following \citet{kaplan2025}, we formulate this as a word retrieval task: taking a multi-token word along with its previous context, we attempt to recreate the full word from the last token representation. We use the prompt \texttt{"Repeat the following word: X, X, X,"} where \texttt{X} is replaced by the intermediary representation. The  prompt was translated by native speakers to Chinese\footnote{\texttt{重复这个词语：X、X、X、}} and Turkish\footnote{\texttt{Bu kelimeyi tekrarla: X, X, X,}}. If detokenization occurs, retrieval accuracy should be higher in the lower layers, as the model is attempting to recreate the full word representation according to the detokenization hypothesis. If the hypothesis is correct that specific attention heads are responsible for the mechanism, as well as the model having distinct stages of inference, we should see that the model fails to correct retrieval at later stages at targeted ablation, while random ablation should not significantly impact retrieval performance.
 
-% Nodes
-\node (data) [process] {Data Collection or Selection};
-\node (preprocess) [process, below=of data] {Preprocessing};
-\node (model) [process, below=of preprocess] {Model Training / Fine-tuning};
-\node (evaluate) [process, below=of model] {Evaluation};
-\node (analysis) [process, below=of evaluate] {Error Analysis \& Interpretation};
-
-% Arrows
-\draw [arrow] (data) -- (preprocess);
-\draw [arrow] (preprocess) -- (model);
-\draw [arrow] (model) -- (evaluate);
-\draw [arrow] (evaluate) -- (analysis);
-
-\end{tikzpicture}
-\caption{Overall structure of the method pipeline.}
-\label{fig:method_pipeline}
-\end{figure}
-
-
-  \item The method section should be described in sufficient detail to allow others to replicate the study, including precise information on data sources, tools, procedures, and any parameters or settings used, see also Appendix 2.
-  
-  \item If your method includes multiple stages (e.g., preprocessing, model training, evaluation), clearly outline each step in order.
-  \item Be honest and transparent about failed experiments, difficulties, or alternative approaches you considered.
-  \item Avoid post hoc justification—describe your decisions as they occurred, not as if everything went smoothly or was predetermined.
-\end{itemize}
-
-
+We capture three types of conditions for our Patchscope runs: (i) a clean forward pass with no ablation, (ii) a targeted ablation that removes the top 5\% highest-scoring attention heads (scored using Equation \ref{eq:headscore}, and (iii) a control condition in which an equal number of heads from the same layers are randomly ablated. We limit ablation to 50\% of the heads in a layer, seeing as otherwise we would be unable to form our random ablation condition. Candidate heads are identified separately for each model-language combination. We then apply Patchscopes to each condition and evaluate retrieval performance on the resulting outputs. We only attempt to reconstruct from the hidden layer output, and not also the FFN as hypothesized by \citet{kaplan2025}, due to computational constraints.
 
 
 

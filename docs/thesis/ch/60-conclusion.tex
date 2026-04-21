@@ -1,48 +1,18 @@
+% concise summary
+% key findings, underscore importance
+% should present what the work has accomplished and why it matters
+% summarize research aim and main results
+% highlight significance of findings
+% reflect briefly on methodological and theoretical contributions
+% suggest directions for future research
 \chapter{Conclusion} \label{cha:conclusion}
-The \textbf{Conclusion} is the final chapter of your thesis. It offers a concise summary of your study, restates your key findings, and underscores their importance. It should leave the reader with a clear understanding of what your work has accomplished—and why it matters.
 
-Unlike the Discussion chapter, which interprets and analyzes the results in depth, the Conclusion provides a high-level synthesis and closure.
+This thesis investigated whether detokenization in large language models depends on a small set of specialized attention heads, and how this process is shaped by tokenizer choice, language, and model size. Across all tested settings, targeted ablation of the highest-scoring attention heads caused larger degradation in word retrieval than random ablation, indicating that detokenization is not purely a distributed or redundant process. Instead, the results support the view that a relatively small subset of early layer attention heads plays an important role in forming intermediary word-level representations from fragmented token inputs.
 
-\subsection*{Purpose of the Chapter}
+The findings also show that this process is not uniform across model configurations. Tokenizer choice affects both retrieval performance and robustness to ablation, but not in a way that can be explained by compression efficiency alone. The results suggest that tokenizer design influences how lexical information is distributed internally: some tokenization schemes appear to support more localized and specialized mechanisms, while others lead to more distributed representations. These differences are especially visible across languages, with English generally showing stronger retrieval than Turkish and Chinese.
 
-The Conclusion should:
-\begin{itemize}
-  \item Summarize the research aim and main results
-  \item Highlight the significance of your findings
-  \item Reflect briefly on methodological or theoretical contributions
-  \item Suggest directions for future research
-\end{itemize}
+Model size further shapes the structure of detokenization. Larger models tend to achieve better retrieval and exhibit sharper early-layer retrieval peaks, suggesting that scaling is associated with earlier and more specialized formation of internal word representations. In the \texttt{qwen2.5} family, targeted ablation was often catastrophic, indicating that larger models may rely more heavily on a small set of functionally important heads. Smaller models, by contrast, appear to use more distributed strategies across layers.
 
-\subsection*{Suggested Structure}
+These findings support the broader hypothesis that detokenization is an identifiable stage of inference in decoder-only language models. At the same time, they suggest that the internal realization of this stage depends on tokenizer design and model scale. This has implications both for mechanistic interpretability, where conclusions may not transfer cleanly across architectures and tokenizers, and for model design, where tokenization choices may shape not only efficiency but also the internal organization of representations.
 
-\begin{enumerate}
-  \item \textbf{Restate the Research Purpose} \\
-  Begin by reminding the reader of the central research aim and the problem you set out to address.
-
-  \item \textbf{Summary of Main Findings} \\
-  Provide a short and focused summary of your most important results. Avoid technical detail—this is a synthesis, not a reanalysis. Structure this part in line with your research questions or study objectives.
-
-  \item \textbf{Contribution of the Thesis} \\
-  Emphasize what your thesis contributes to the field. This might be:
-  \begin{itemize}
-    \item A new empirical finding
-    \item A novel application of an existing method
-    \item A tool or dataset you created or evaluated
-    \item A methodological insight or theoretical clarification
-  \end{itemize}
-
-  \item \textbf{Limitations (Optional)} \\
-  Briefly acknowledge any important limitations that shape how your conclusions should be interpreted.
-
-  \item \textbf{Outlook / Future Work} \\
-  Conclude by suggesting how future research could build on your work. Keep this realistic and grounded—your goal is to show the next logical step, not to promise breakthroughs.
-\end{enumerate}
-
-\subsection*{Best Practices}
-
-\begin{itemize}
-  \item Keep the conclusion concise—typically 1–2 pages.
-  \item Avoid introducing new data, references, or analysis.
-  \item Use clear, confident language without overstating your results.
-  \item End on a forward-looking note, showing how your work fits into a larger research landscape.
-\end{itemize}
+Future work should examine whether these detokenization-related heads are equally important for generation, and how such mechanisms emerge over the course of training.
