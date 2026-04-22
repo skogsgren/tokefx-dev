@@ -51,5 +51,16 @@ article:
 	(cd "$$tmp" && tectonic acl_latex.tex); \
 	cp "$$tmp/acl_latex.pdf" "$(OUT)/article.pdf"
 
+results:
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d)"; \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	mkdir -p "$(OUT)"; \
+	cp references.bib "$$tmp/"; \
+	cp -a update_results/. "$$tmp/"; \
+	(cd "$$tmp" && tectonic slides.tex); \
+	cp "$$tmp/slides.pdf" "$(OUT)/results.pdf"
+
+
 clean:
 	@rm -rf "$(OUT)"
