@@ -1,36 +1,17 @@
 \begin{table}[ht]
 \small
 \centering
-\begin{tabular}{llr}
+\begin{tabular}{lccc}
 \toprule
-\textbf{Tokenizer} & \textbf{Language} & \textbf{BPT} \\
+\textbf{Tokenizer} & \textbf{English} & \textbf{Turkish} & \textbf{Chinese} \\
 \midrule
-\multirow{3}{*}{\texttt{aya-expanse-8b}}
- & English & 4.68 \\
- & Turkish & 4.35 \\
- & Chinese & 4.05 \\
-\addlinespace
-\multirow{3}{*}{\texttt{byt5-small}}
- & English & 1.00 \\
- & Turkish & 1.00 \\
- & Chinese & 1.00 \\
-\addlinespace
-\multirow{3}{*}{\texttt{xglm-564M}}
- & English & 4.59 \\
- & Turkish & 4.47 \\
- & Chinese & 3.38 \\
-\addlinespace
-\multirow{3}{*}{\texttt{gpt2}}
- & English & 4.63 \\
- & Turkish & 2.30 \\
- & Chinese & 1.36 \\
-\addlinespace
-\multirow{3}{*}{\texttt{Qwen2.5}}
- & English & 4.52 \\
- & Turkish & 3.17 \\
- & Chinese & 3.67 \\
+\texttt{aya-expanse-8b} & 4.68 & 4.35 & 4.05 \\
+\texttt{byt5-small}     & 1.00 & 1.00 & 1.00 \\
+\texttt{xglm-564M}      & 4.59 & 4.47 & 3.38 \\
+\texttt{gpt2}           & 4.63 & 2.30 & 1.36 \\
+\texttt{Qwen2.5}        & 4.52 & 3.17 & 3.67 \\
 \bottomrule
 \end{tabular}
-\caption[Byte/token scores for tokenizer/lang combinations]{Byte/token scores for each tokenizer/language calculated over the UD-PUD dataset.}
+\caption{Byte/token scores (BPT) over UD-PUD. Higher is better.}
 \label{tab:fertility}
 \end{table}
