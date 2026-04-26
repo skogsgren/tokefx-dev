@@ -5,8 +5,10 @@
     \setsansfont{MLMSans10}
     \setmonofont{MLMMono10}
 \usepackage{verbatim}
+\usepackage{tikz}
+    \usetikzlibrary{positioning, arrows.meta}
 
-\title{Is Detokenization All In The Head?}
+\title{Ain't Detokenization A Kick In The Head?}
 \subtitle{An Interventional Study of Specialized Attention Heads \\ in Early Word Reconstruction}
 \author{Gustaf Gren}
 \date{Results}
@@ -20,28 +22,49 @@
 \begin{frame}{Detokenization in LLMs}
 
 Tokenization can split up words non-coherently;\\
-e.g.\ \texttt{['H',~'eming',~'way']}
+e.g.\ \texttt{['H',~'eming',~'way']} \\
+How do LLMs reconstruct such larger fragments?
 
-\bigskip
+\vfill
+
 \begin{itemize}
-\item[\textbf{RQ1}] Do a few attention heads (5\%) drive whole-word representations in LLMs?
-\item[\textbf{RQ2}] How does tokenizer choice affect these representations and robustness to ablation?
-\item[\textbf{RQ3}] How does model size affect these representations and robustness to ablation?
+\item[\textbf{RQ1}] Do a set of attention heads (5\%) drive whole-word representations in LLMs?
+\item[\textbf{RQ2}] How does tokenizer choice affect these representations and robustness to zeroing attention head outputs?
+\item[\textbf{RQ3}] How does model size affect these representations and robustness to zeroing attention head outputs?
 \end{itemize}
 
 \end{frame}
 
 \begin{frame}{How to test that?}
 
-\begin{block}{\textbf{Identification}}
-    Identify candidate attention heads (prev. update)
+\begin{block}{\textbf{1. Identification}}
+    Identify a 5\% set of candidate attention heads by highest delta
+    \begin{center}
+
+    \begin{tikzpicture}[baseline, every node/.style={text height=1ex, text depth=.25ex}, node distance=1.2cm]
+    \node (1) {\texttt{␣witch}};
+    \node (2) [right of=1] {\texttt{craft}};
+    \draw[->, thick] (2.north) to[out=90,in=90,looseness=1.6] (1.north);
+    \end{tikzpicture}
+    (in-boundary)
+
+    \begin{tikzpicture}[baseline, every node/.style={text height=1ex, text depth=.25ex}, node distance=2cm]
+    \node (1) {\texttt{␣forbidden}};
+    \node (2) [right of=1] {\texttt{␣sandwich}};
+    \draw[->, thick] (2.north) to[out=90,in=90,looseness=1.6] (1.north);
+    \end{tikzpicture}
+    (out-boundary)
+
+    \end{center}
+
 \end{block}
 
+
 \bigskip
-\begin{block}{\textbf{Ablation}}
+\begin{block}{\textbf{2. Ablation}}
     \begin{itemize}
-        \item Zero out $n$ attention heads in chosen layers.
-        \item $n$ random head ablation in the same layers.
+        \item Zero out (also called \textit{ablation)} top candidate attention head output.
+        \item Random head ablation in the same layers.
         \item Compare targeted vs.\ random ablation vs.\ clean run.
     \end{itemize}
 \end{block}
@@ -49,15 +72,15 @@ e.g.\ \texttt{['H',~'eming',~'way']}
 \end{frame}
 
 \begin{frame}{The Task}
-\begin{exampleblock}{Example token sequence}
+\begin{exampleblock}{Example input sequence}
 \small{
-\texttt{['Sal', ' Paradiso', ' lives', ' in', ' Pat', \textcolor{red}{'erson'}]}
+\texttt{['Sal', '␣Paradiso', '␣lives', '␣in', '␣Pat', \textbf{\textcolor{red}{'erson'}}]}
 }
 \end{exampleblock}
 
 \bigskip
 \begin{block}{Activation Patching}
-Take the hidden state from each layer and insert it as $X$ into a fixed prompt to reconstruct the original full word.
+Patch each layer's hidden state to \texttt{X} to reconstruct the full word (e.g., \texttt{'erson'} $\rightarrow$ 'Paterson')
 \end{block}
 
 \medskip
@@ -66,36 +89,33 @@ Take the hidden state from each layer and insert it as $X$ into a fixed prompt t
 
 \begin{frame}{RQ1: Targeted vs.\ Random Ablation}
 \begin{itemize}
-    \item Targeted ablation suffers large performance drop compared to baseline.
-    \item Random ablation has minor effect in general.
+    \item Targeted ablation suffers large performance drop compared to baseline across all tested configurations (except 1)
+    \item Random ablation has minor effect in general (except 1)
 \end{itemize}
 
-\bigskip
-\textbf{For example}: in \texttt{qwen2.5}/English we drop from 0.81\ in the clean
-condition to 0.01 after targeted ablation, but we only drop to 0.80 after
-random ablation.
-
+\vfill
+\textbf{For example}: in \texttt{qwen2.5-7B}/English, final cumulative word retrieval falls from 81\% to 1\% under targeted ablation, versus falling to 80\% with random ablation.
 \end{frame}
 
-\begin{frame}{RQ2: Tokenizer \& Language}
-\begin{center}
-\includegraphics[width=0.55\linewidth]{plots/toksuite_stack/layerwise_retrieval_pooled_mean.pdf}
-\end{center}
-\end{frame}
+% \begin{frame}{RQ2: Tokenizer}
+% \begin{center}
+% \includegraphics[width=0.55\linewidth]{plots/toksuite_stack/layerwise_retrieval_pooled_mean.pdf}
+% \end{center}
+% \end{frame}
 
-\begin{frame}{RQ2: Tokenizer \& Language --- English}
+\begin{frame}{RQ2: Tokenizer Choice --- English}
 \begin{center}
 \includegraphics[width=0.55\linewidth]{plots/toksuite_stack/layerwise_retrieval_lang_english.pdf}
 \end{center}
 \end{frame}
 
-\begin{frame}{RQ3: Model Size}
+\begin{frame}{RQ3: Model Size --- All Languages}
 \begin{center}
 \includegraphics[width=0.55\linewidth]{plots/qwen_stack/layerwise_retrieval_pooled_mean.pdf}
 \end{center}
 \end{frame}
 
-\begin{frame}{RQ3: Model Size}
+\begin{frame}{RQ3: Model Size --- All Languages}
 \begin{center}
 \includegraphics[width=0.7\linewidth]{plots/qwen_rr/retrieved_rate_model_comparison/pooled/retrieved_rate_model_comparison_pooled.pdf}
 \end{center}
@@ -103,10 +123,13 @@ random ablation.
 
 \begin{frame}{Takeaways}
 \begin{itemize}
-\item Specific attention heads drive multi-token word representations.
-\item Zeroing these heads \textbf{hurts retrieval} (random not so much)>
-\item Larger models show \textbf{specialized attention} and better retrieval.
-\item Tokenizer design impacts learning efficiency for representations.
+\item Specific attention heads seem drive multi-token word representations.
+\item Zeroing these heads \textbf{hurts retrieval} (random not so much)
+\item Results suggest:
+    \begin{enumerate}
+        \item Larger models show \textit{specialized attention}.
+        \item The tokenizer impacts learning efficiency for representations.
+    \end{enumerate}
 \end{itemize}
 \end{frame}
 
