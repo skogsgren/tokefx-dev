@@ -5,7 +5,7 @@
 % analysis methods: quantiative metrics; statistical methods or tests; qualitative or error analysis
 % ethical considerations
 
-This is an ablation study carried out in two stages: \textit{identification}, where attention heads are identified; and \textit{ablation} where the vectors of those attention heads outputs are intentionally set to 0 and compared to a clean run baseline and random ablation conditions. The structure of this section is as follows: Section \ref{sec:data} starts with describing the dataset used, as well as how it was preprocessed and filtered. Section \ref{sec:identification} goes through the identification of attention heads and the Section \ref{sec:ablation} the ablation methodology.
+This study is carried out in two stages: \textit{identification}, where attention heads are identified; and \textit{ablation} where the vectors of those attention heads outputs are intentionally set to 0 and compared to a clean run baseline and random ablation conditions. The structure of this section is as follows: Section \ref{sec:data} starts with describing the dataset used, as well as how it was preprocessed and filtered. Section \ref{sec:identification} goes through the identification of attention heads and the Section \ref{sec:ablation} the ablation methodology.
 
 \section{Data}\label{sec:data}
 
@@ -15,9 +15,11 @@ We conduct our analysis on Chinese, English and Turkish using the Universal Depe
 
 To avoid trivial cross-lingual matches, we exclude words with part-of-speech tags that often remain unchanged across languages, including punctuation, proper nouns, symbols, and numbers. We also discard tokens occurring before the fourth position in a sequence, as limited preceding context and positional effects (e.g., the first token acting as an attention sink \citep{xiao2024efficient}) can confound the analysis. After filtering, we randomly shuffle the data and sample 250 unique words with their preceding context for each language and configuration.
 
-A key challenge is that tokenization efficiency varies substantially across languages and tokenizers, making simple distinctions such as single-token vs. multi-token words \citep{kaplan2025} non-comparable. For example, under the GPT-2 tokenizer, which is not trained on Chinese, most Chinese words span multiple tokens due to their higher byte length. As a result, a ``single-token word'' in Chinese is not comparable to one in English or Turkish, which is further amplified in byte-level tokenizers. To address this, we adopt boundary-based conditions inspired by \citet{kaplan2025, ferrando2024informationflow}. The in-boundary condition measures attention from the final subtoken of a word to its penultimate subtoken, while the out-boundary condition measures attention from the first subtoken of a word to the final subtoken of the preceding word.
-
 \section{Identification}\label{sec:identification}
+
+A key challenge is that tokenization efficiency varies substantially across languages and tokenizers, making simple distinctions such as single-token vs. multi-token words \citep{kaplan2025} non-comparable. For example, under the GPT-2 tokenizer, which is not trained on Chinese, most Chinese words span multiple tokens due to their higher byte length. As a result, a ``single-token word'' in Chinese is not comparable to one in English or Turkish, which is further amplified in byte-level tokenizers. To address this, we adopt boundary-based conditions inspired by \citet{kaplan2025, ferrando2024informationflow}. The in-boundary condition measures attention from the final subtoken of a word to its penultimate subtoken, while the out-boundary condition measures attention from the first subtoken of a word to the final subtoken of the preceding word. See Figure~\ref{fig:boundary_example} for an example.
+
+\input{fig/boundary_example.tex}
 
 The setup follows the hypothesis proposed by \citet{kaplan2025, ferrando2024informationflow}. If information about a word's internal structure is propagated through the residual stream, and specific attention heads are involved in aggregating subword units, then such heads should preferentially attend from the final subtoken of a word to preceding subtokens within the same word. Under this hypothesis, attention from the final subtoken to the penultimate subtoken should be stronger than attention that crosses a word boundary. The out-boundary condition serves as a control.
 
@@ -44,10 +46,17 @@ We report bytes per token (BPT), $BPT = \frac{\text{tokens}}{\text{bytes}}$, in 
 
 \input{tab/fertility.tex}
 
-We evaluate whether candidate attention heads support representations useful for word reconstruction using zero-ablation \citep{michel2019}, which removes selected heads by setting their outputs to zero. To measure the effect on representations, we apply Patchscopes \citep{ghandeharioun2024}, an activation patching method \citep{vig2020} that extracts a hidden state from a source forward pass (at a given layer and token position) and inserts it into a separate forward pass on a target prompt designed to elicit specific information.
+We evaluate whether candidate attention heads contribute to representations useful for word reconstruction. To do this, we combine zero-ablation \citep{michel2019}, which removes selected heads by setting their outputs to zero, with Patchscopes \citep{ghandeharioun2024}, an activation patching method \citep{vig2020}. Patchscopes extracts a hidden state from a source forward pass (at a given layer and token position) and inserts it into a separate forward pass on a target prompt designed to elicit specific information.
 
-Following \citet{kaplan2025}, we cast this as a word retrieval task. Given a multi-token word and its preceding context, we attempt to reconstruct the full word from the final-token representation. We use the prompt \texttt{"Repeat the following word: X, X, X,"}, where \texttt{X} is replaced by the patched representation. The prompt is translated into Chinese\footnote{\texttt{重复这个词语：X、X、X、}} and Turkish\footnote{\texttt{Bu kelimeyi tekrarla: X, X, X,}} by native speakers. Under the detokenization hypothesis, retrieval accuracy should be higher in lower layers, where the model reconstructs full-word representations. If specific attention heads implement this mechanism within a staged inference process, targeted ablation should impair later-stage retrieval, whereas random ablation should have minimal effect.
+Following \citet{kaplan2025}, we frame this as a word retrieval task. Given a multi-token word and its preceding context, we attempt to reconstruct the full word from the final-token representation. We use the prompt \texttt{"Repeat the following word: X, X, X,"}, where \texttt{X} is replaced by the patched representation. The prompt is translated into Chinese\footnote{\texttt{重复这个词语：X、X、X、}} and Turkish\footnote{\texttt{Bu kelimeyi tekrarla: X, X, X,}} by native speakers. Under the detokenization hypothesis, retrieval accuracy should be higher in lower layers, where full-word representations are reconstructed. If specific attention heads implement this mechanism as part of a staged inference process, then targeted ablation should impair retrieval, whereas random ablation should have minimal effect.
 
-We evaluate three Patchscope conditions: (i) a clean forward pass without ablation, (ii) targeted ablation removing the top 5\% highest-scoring attention heads (Equation \ref{eq:headscore}), and (iii) a control condition that randomly ablates an equal number of heads from the same layers. Ablation is capped at 50\% of heads per layer to ensure a valid random control. Candidate heads are identified separately for each model–language pair. For each condition, we apply Patchscopes and measure retrieval performance. Due to computational constraints, we reconstruct only from the hidden state output, rather than additionally probing the FFN as in \citet{kaplan2025}.
+We evaluate three conditions:
 
+\begin{enumerate}
+\tightlist
+\item No ablation
+\item Targeted ablation removing the top 5\% highest-scoring attention heads (Equation~\ref{eq:headscore}
+\item Random ablation of \textbf{an equal number} of heads from the same layers as the targeted ablation.
+\end{enumerate}
 
+Ablation is capped at 50\% of heads per layer to maintain a valid control. Candidate heads are identified separately for each model–language pair. For each condition, we apply Patchscopes and measure retrieval performance. Due to computational constraints, we reconstruct only from the hidden state output, rather than additionally probing the FFN as in \citet{kaplan2025}.
