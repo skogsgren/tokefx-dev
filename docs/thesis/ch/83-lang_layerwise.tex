@@ -1,4 +1,59 @@
-\chapter*{By-Language Cumulative Retrieval Plots} \label{sec:appendix_layerwise}
+\chapter*{Cumulative Retrieval by Language} \label{sec:appendix_layerwise}
 
-\input{fig/toksuite_layerwise.tex}
-\input{fig/qwen_layerwise.tex}
+\begin{figure}[ht]
+\centering
+
+\textbf{Toksuite}
+
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/toksuite_stack/layerwise_retrieval_lang_chinese.pdf}
+    \caption{Chinese}
+    \label{fig:layerwise_zh}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/toksuite_stack/layerwise_retrieval_lang_english.pdf}
+    \caption{English}
+    \label{fig:layerwise_en}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/toksuite_stack/layerwise_retrieval_lang_turkish.pdf}
+    \caption{Turkish}
+    \label{fig:layerwise_tr}
+\end{subfigure}
+
+\textbf{Qwen2.5}
+
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_chinese.pdf}
+    \caption{Chinese}
+    \label{fig:qwen_layerwise_zh}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_english.pdf}
+    \caption{English}
+    \label{fig:qwen_layerwise_en}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{plots/qwen_stack/layerwise_retrieval_lang_turkish.pdf}
+    \caption{Turkish}
+    \label{fig:qwen_layerwise_tr}
+\end{subfigure}
+
+\caption[Layerwise retrieval across languages]{
+Layerwise retrieval across languages for \texttt{Toksuite} (top row) and \texttt{Qwen2.5} (bottom row):
+Chinese, English, and Turkish. Top: cumulative first retrieval (clean).
+Bottom: change under targeted ablation relative to clean; negative values indicate delayed or suppressed retrieval.
+Dashed gray curve and shaded band denote the median and interquartile range of the random-ablation effect.
+}
+\label{fig:layerwise_lang_combined}
+\end{figure}
