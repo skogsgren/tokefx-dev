@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --gpus-per-node=A40:1
 #SBATCH --nodes=1
-#SBATCH -t 0-23:00:0
+#SBATCH -t 1-20:00:0
 #SBATCH --output=logs/qwen/log-%j.out
 #SBATCH -A NAISS2025-22-601
 set -euo pipefail

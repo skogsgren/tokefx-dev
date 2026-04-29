@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#SBATCH --gpus-per-node=T4:1
+#SBATCH --gpus-per-node=A40:1
 #SBATCH --nodes=1
-#SBATCH -t 0-23:00:0
-#SBATCH --output=logs/toksuite/log-%j.out
+#SBATCH -t 1-20:00:0
+#SBATCH --output=logs/qwen_001/log-%j.out
 #SBATCH -A NAISS2025-22-601
 set -euo pipefail
 
@@ -19,7 +19,7 @@ module load "PyTorch/2.7.1-foss-2024a-CUDA-12.6.0"
 echo "$(date) activating venv"
 source "$MIMER_DIR/.venv/tokefx/bin/activate"
 
-echo "$(date) starting evaluation for toksuite models"
+echo "$(date) starting evaluation for Qwen models"
 cd "$MIMER_DIR/tokefx-dev/" || exit
-./scripts/run --in_boundary_mode all --ablation_map_type attention_mass configs/toksuite_config.toml
-echo "$(date) finished evaluation for toksuite models"
+./scripts/run --in_boundary_mode all --ablation_map_type attention_mass configs/qwen_001_config.toml
+echo "$(date) finished evaluation for Qwen models"

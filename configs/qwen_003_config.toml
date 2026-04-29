@@ -1,7 +1,7 @@
 [dir]
 ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
 belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
-out="$MIMER_DIR/tokefx-dev/out/toksuite"
+out="$MIMER_DIR/tokefx-dev/out/qwen_003"
 
 [lang]
 
@@ -22,10 +22,10 @@ patchscopes_prompt="重复这个词语：X、X、X、"
 
 [eval]
 models=[ # (model, tokenizer) tuples
-    ["toksuite/CohereLabs-aya-expanse-8b", "CohereLabs/aya-expanse-8b"],
-    ["toksuite/google-byt5-small", "google/byt5-small"],
-    ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
-    ["toksuite/gpt2", "gpt2"],
+    ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B"],
+    ["Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-1.5B"],
+    ["Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-3B"],
+    ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-7B"],
 ]
 ablations=[
     "targeted",
@@ -50,4 +50,4 @@ n_rows=250
 context_window=4096
 ablation_map_rank_by="sum_z"
 ablation_map_max_layer=15
-ablation_map_topk=0.05
+ablation_map_topk=0.03

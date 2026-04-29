@@ -1,0 +1,53 @@
+[dir]
+ud_base="$MIMER_DIR/tokefx-dev/data/UD_PUD/"
+belebele_base="$MIMER_DIR/tokefx-dev/data/belebele/"
+out="$MIMER_DIR/tokefx-dev/out/toksuite_001_score"
+
+[lang]
+
+[lang.english]
+iso639="eng_Latn"
+pud-conllu="UD_English-PUD/en_pud-ud-test.conllu"
+patchscopes_prompt="Repeat this word: X, X, X,"
+
+[lang.turkish]
+iso639="tur_Latn"
+pud-conllu="UD_Turkish-PUD/tr_pud-ud-test.conllu"
+patchscopes_prompt="Bu kelimeyi tekrarla: X, X, X,"
+
+[lang.chinese]
+iso639="zho_Hans"
+pud-conllu="UD_Chinese-PUD/zh_pud-ud-test.conllu"
+patchscopes_prompt="重复这个词语：X、X、X、"
+
+[eval]
+models=[ # (model, tokenizer) tuples
+    ["toksuite/CohereLabs-aya-expanse-8b", "CohereLabs/aya-expanse-8b"],
+    ["toksuite/google-byt5-small", "google/byt5-small"],
+    ["toksuite/facebook-xglm-564M", "facebook/xglm-564M"],
+    ["toksuite/gpt2", "gpt2"],
+]
+ablations=[
+    "targeted",
+    "random",
+    "clean",
+]
+ignored_pos=[
+    "PROPN", # proper nouns (since they're probably identical between some languages)
+    "PUNCT", # punctuation
+    "PART", # particles
+    "SYM", # symbols
+    "NUM", # numbers
+    "X", # foreign words
+]
+device="cuda"
+add_special_tokens=false
+max_tokens_per_sequence=3
+min_bytes_per_token=4
+min_tokens_per_candidate=2
+min_context=4
+n_rows=250
+context_window=4096
+ablation_map_rank_by="score_z"
+ablation_map_max_layer=15
+ablation_map_topk=0.01
