@@ -59,4 +59,4 @@ We evaluate three conditions:
 \item Random ablation of \textbf{an equal number} of heads from the same layers as the targeted ablation.
 \end{enumerate}
 
-Ablation is capped at 50\% of heads per layer to maintain a valid control. Candidate heads are identified separately for each model–language pair. For each condition, we apply Patchscopes and measure retrieval performance. Due to computational constraints, we reconstruct only from the hidden state output, rather than additionally probing the FFN as in \citet{kaplan2025}.
+Ablation is capped at 50\% of heads per layer to maintain a valid control. Candidate heads are identified separately for each model–language pair, and is only picked from the first fifteen layers since \textit{detokenization} is hypothesized to be an early-layer phenomena. For each condition, we apply Patchscopes and measure retrieval performance. Due to computational constraints, we reconstruct only from the hidden state output, rather than additionally probing the FFN as in \citet{kaplan2025}.

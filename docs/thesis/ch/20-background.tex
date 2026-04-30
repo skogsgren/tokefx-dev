@@ -62,7 +62,7 @@ In decoder-only transformers, training is performed using next-token prediction,
 \text{head}_i (Q, K, V) = \text{Att}(QW_i^{Q}, KW_i^{K}, VW_i^{V})
 \end{equation}
 
-Modern large language models such as LLaMA2 \citep{llama2} and Qwen \citep{qwen2.5,qwen2} follow the transformer architecture with several modifications to improve efficiency and training stability. Rather than describing the original transformer in detail, this work focuses on the specific design choices used in these models.
+Modern large language models such as LLaMA2 \citep{llama2} and Qwen \citep{qwen2.5,qwen2} follow the transformer architecture with several modifications to improve efficiency and training stability. Rather than describing the original transformer in detail, this work focuses on the specific design choices used in these models since they are subsequently used for analysis.
 
 In the attention mechanism, both model families employ Grouped Query Attention (GQA) \citep{ainslie2023}, where multiple query heads share keys and values. This reduces memory bandwidth and improves inference speed, at the potential cost of increased interactions between heads compared to standard multi-head attention.
 
