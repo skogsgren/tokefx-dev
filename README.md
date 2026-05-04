@@ -80,6 +80,10 @@ You can inspect the raw `parquet` file which contains every individual instance 
 
 It contains some nifty optional flags like `--no_layers` if you want to use it to debug token boundaries. See `./debug_parquet -h` for all the options.
 
+## Plots
+
+The actual plotting scripts used for the thesis are available in the [`tokefx/oneoff`](/tokefx/oneoff) folder. Most of them are terrible and shouldn't be touched.
+
 ### ALVIS/SLURM Notes
 
 In the [`/slurm`](/slurm) folder are SLURM scripts to run on your favorite SLURM cluster. They were made with [ALVIS](https://www.c3se.chalmers.se/about/Alvis/) in mind, so details for your local SLURM may vary. For ALVIS the setup is as you suspect, e.g.:
