@@ -3,26 +3,34 @@
 ## Quick Start
 Clone the repo:
 
-```{bash}
-git clone https://github.com/skogsgren/tokefx-dev
-cd tokefx-dev
+```
+git clone https://github.com/skogsgren/tokefx
+cd tokefx
 ```
 
 Then set up the Python environment, e.g.\
 
-```{bash}
-python3 -m venv /path/to/venv
-source /path/to/venv/bin/activate
+```
+python3 -m venv venv
+source venv/bin/activate
 pip3 install -e .
 ```
 
-Then download `ud-data`:
+Then download `ud-data` (exact commands might change slightly when versions change):
 
-```{bash}
+```
 curl -L -o ud-treebanks.zip \
   "https://lindat.mff.cuni.cz/repository/server/api/core/items/b4fcb1e0-f4b2-4939-80f5-baeafda9e5c0/allzip?handleId=11234/1-6036"
+unzip ud-treebanks.zip
+tar xvfz  ud-treebanks-v2.17.tgz
 mkdir -p ./data
-unzip ud-treebanks.zip -d ./data
+mv ud-treebanks-v2.17 data/UD_PUD
+```
+
+(and then cleanup of the archives if desired):
+
+```
+rm ud-*.tgz
 rm ud-treebanks.zip
 ```
 
@@ -46,7 +54,7 @@ data/
     ...
 ```
 
-There's a runscript at [`/scripts/run`](/scripts/run) which acts as a pipeline wrapper. To run the `toksuite` experiments as they appear in the thesis you would run it like so:
+There's a runscript at [`/scripts/run`](/scripts/run) which acts as a pipeline wrapper. To run the `toksuite` experiments you would run it like so:
 
 ```
 ./scripts/run configs/toksuite_config.toml
