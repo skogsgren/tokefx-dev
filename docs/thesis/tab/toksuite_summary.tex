@@ -1,26 +1,33 @@
 \begin{table*}[t]
 \centering
-\small
-\begin{tabular}{llrrr}
+\scriptsize
+\setlength{\tabcolsep}{3.0pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrrrrrr}
 \toprule
-\textbf{Language} & \textbf{Model} & \textbf{Clean $\uparrow$} & \textbf{Targeted $\Delta$} & \textbf{Random $\Delta$} \\
+\textbf{Language} & \textbf{Model} & \textbf{Clean final $\uparrow$} & \multicolumn{3}{c}{\textbf{Targeted $\Delta$ final}} & \multicolumn{3}{c}{\textbf{Random $\Delta$ final}} & \textbf{Gap 5\%} \\
+\cmidrule(lr){4-6}
+\cmidrule(lr){7-9}
+ &  &  & 1\% & 3\% & 5\% & 1\% & 3\% & 5\% &  \\
 \midrule
-\multirow{4}{*}{Chinese} & CohereLabs-aya-expanse-8b & 0.38 & -0.20 & 0.00 \\
- & gpt2 & 0.36 & -0.05 & -0.02 \\
- & facebook-xglm-564M & 0.36 & -0.22 & -0.02 \\
- & google-byt5-small & 0.12 & -0.00 & 0.01 \\
+\multirow{4}{*}{Chinese} & \texttt{CohereLabs-aya-expanse-8b} & 0.38 & -0.07 & -0.16 & -0.20 & 0.00 & -0.01 & 0.00 & -0.20 \\
+ & \texttt{gpt2} & 0.36 & -0.02 & -0.04 & -0.05 & -0.02 & -0.02 & -0.02 & -0.03 \\
+ & \texttt{facebook-xglm-564M} & 0.36 & -0.09 & -0.20 & -0.22 & -0.01 & -0.00 & -0.02 & -0.20 \\
+ & \texttt{google-byt5-small} & 0.12 & 0.00 & 0.00 & -0.00 & 0.00 & 0.00 & 0.01 & -0.01 \\
 \addlinespace
-\multirow{4}{*}{English} & facebook-xglm-564M & 0.81 & -0.38 & 0.02 \\
- & gpt2 & 0.47 & -0.23 & 0.02 \\
- & CohereLabs-aya-expanse-8b & 0.28 & -0.23 & 0.01 \\
- & google-byt5-small & 0.07 & -0.06 & -0.00 \\
+\multirow{4}{*}{English} & \texttt{facebook-xglm-564M} & 0.81 & -0.01 & -0.23 & -0.38 & 0.01 & 0.01 & 0.02 & -0.40 \\
+ & \texttt{gpt2} & 0.47 & -0.02 & -0.10 & -0.23 & 0.02 & -0.02 & 0.02 & -0.25 \\
+ & \texttt{CohereLabs-aya-expanse-8b} & 0.28 & 0.04 & -0.13 & -0.23 & 0.03 & 0.02 & 0.01 & -0.24 \\
+ & \texttt{google-byt5-small} & 0.07 & -0.00 & -0.00 & -0.06 & -0.01 & 0.00 & -0.00 & -0.06 \\
 \addlinespace
-\multirow{4}{*}{Turkish} & facebook-xglm-564M & 0.58 & -0.19 & 0.01 \\
- & gpt2 & 0.49 & -0.04 & 0.00 \\
- & CohereLabs-aya-expanse-8b & 0.39 & -0.24 & -0.04 \\
- & google-byt5-small & 0.01 & 0.01 & 0.00 \\
+\multirow{4}{*}{Turkish} & \texttt{facebook-xglm-564M} & 0.58 & -0.01 & -0.10 & -0.19 & -0.01 & 0.02 & 0.01 & -0.20 \\
+ & \texttt{gpt2} & 0.49 & 0.00 & -0.04 & -0.04 & 0.00 & -0.00 & 0.00 & -0.04 \\
+ & \texttt{CohereLabs-aya-expanse-8b} & 0.39 & -0.06 & -0.15 & -0.24 & -0.02 & 0.01 & -0.04 & -0.20 \\
+ & \texttt{google-byt5-small} & 0.01 & -0.00 & 0.00 & 0.01 & 0.00 & 0.01 & 0.00 & 0.01 \\
 \bottomrule
 \end{tabular}
-\caption[Final-layer retrieval for Toksuite models]{Summary of final-layer retrieval by language and \texttt{Toksuite} model. Clean is the cumulative first-retrieval rate at the final relative layer. Targeted and random deltas are measured relative to the clean condition; more negative values indicate stronger disruption.}
+}%
+\caption[\texttt{toksuite} results summary]{Summary of final-layer retrieval under increasing ablation strength for \texttt{toksuite}. Clean final is the cumulative first-retrieval rate at the final layer. Targeted and random deltas are measured relative to the clean condition. More negative values indicate stronger disruption after all layers have had the opportunity to compensate. Gap 5\% is the targeted delta minus the random delta at the largest ablation level.}
 \label{tab:toksuite_summary}
 \end{table*}
+

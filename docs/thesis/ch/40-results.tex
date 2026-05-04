@@ -1,7 +1,3 @@
-% overview of the section
-% results by question or theme
-% figures and tables
-% textual summary
 \chapter{Results} \label{cha:results}
 
 This section is structured as follows: first the results are summed up, grouped by research question. Then, in Section~\ref{sec:results_rq1} the results for \textbf{RQ1} is presented in more detail, followed by Section~\ref{sec:results_rq2} for \textbf{RQ2} and Section~\ref{sec:results_rq3} for \textbf{RQ3} respectively.
@@ -24,18 +20,15 @@ Targeted ablation leads to worse retrieval than the random ablation in every cas
 For the \texttt{Toksuite} models, the magnitude of targeted ablation depends by the language and tokenizer. The strongest effect is observed for English with
 the XGLM tokenizer, where cumulative retrieval drops from $\sim 0.7$ to $\sim 0.15$ for the first 25\% of layers. Although performance partially recovers in later layers, it remains 0.3 below the clean baseline at the final layer. In contrast, targeted ablation has minimal effect in Chinese for certain tokenizers. For the \texttt{ByT5} tokenizer, no additional degradation is observed under targeted ablation, and in one case leads to an \textit{improvement} by 0.01. Similarly, the \texttt{gpt2} tokenizer shows only a small drop (0.04) in Chinese, less than other tokenizer/language combinations.
 
-Averaged across \texttt{Toksuite} models, retrieval performance is highest for English, lower for Turkish, and lowest for Chinese. In Chinese, most tokenizers perform similarly, with the exception of \texttt{ByT5}, which deviates from this trend. Figure~\ref{fig:toksuite_layerwise_pooled} presents the cumulative retrieval for each tokenizer, pooled across languages. Figure\ref{fig:toksuite_rr} shows the retrieval rate per layer for each tokenizer and condition.
+Averaged across \texttt{Toksuite} models, retrieval performance is highest for English, lower for Turkish, and lowest for Chinese. In Chinese, most tokenizers perform similarly, with the exception of \texttt{ByT5}, which deviates from this trend. Figure~\ref{fig:toksuite_stacked} presents the cumulative retrieval for each tokenizer, pooled across languages. Figure\ref{fig:rr} shows the retrieval rate per layer for each tokenizer and condition.
 
-\input{fig/toksuite_layerwise_pooled.tex}
-
-\input{fig/toksuite_rr.tex}
+\input{fig/qwen_stacked.tex}
+\input{fig/toksuite_stacked.tex}
 
 \section{\texttt{Qwen2.5} --- Parameter Size}\label{sec:results_rq3}
 
 The \texttt{Qwen2.5} models exhibit a qualitatively different pattern. Here, targeted ablation is catastrophic: cumulative retrieval is nearly eliminated across all configurations, with final retrieval not exceeding 0.09. For instance, in the 7B model, retrieval drops from 0.79 to 0.01 under targeted ablation. Random ablation has a larger effect in these models than in \texttt{Toksuite}, but remains weaker than targeted ablation. The highest random ablation impact is for the 1.5B model (English), where random ablation reduces retrieval by 0.26 as compared to a 0.69 reduction under targeted ablation. Across all \texttt{Qwen2.5} models, English consistently outperforms Turkish and Chinese, which show similar performance levels. The largest model has the best retrieval of the tested sizes, although the 1.5B outperforms the 3B in all languages except Turkish.
 
-Layerwise analysis reveals that the 7B and 3B models exhibit early peaks in retrieval rate, while the 1.5B model distributes retrieval more evenly across layers. The pooled layerwise analysis is available in Figure~\ref{fig:qwen_layerwise_pooled}. The 0.5B model shows neither strong retrieval nor a clear peak. Retrieval rate curves are shown in Figure~\ref{fig:qwen_rr}.
+Layerwise analysis reveals that the 7B and 3B models exhibit early peaks in retrieval rate, while the 1.5B model distributes retrieval more evenly across layers. The pooled layerwise analysis is available in Figure~\ref{fig:qwen_stacked}. The 0.5B model shows neither strong retrieval nor a clear peak. Retrieval rate curves are shown in Figure~\ref{fig:rr}.
 
-\input{fig/qwen_layerwise_pooled.tex}
-
-\input{fig/qwen_rr.tex}
+\input{fig/rr.tex}

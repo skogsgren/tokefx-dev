@@ -1,0 +1,20 @@
+\begin{figure}[t]
+\centering
+\makebox[\linewidth][c]{%
+    \begin{subfigure}{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/toksuite_rr/retrieved_rate_model_comparison/pooled/retrieved_rate_model_comparison_pooled.pdf}
+        \caption{\texttt{toksuite}}
+        \label{fig:toksuite_rr}
+    \end{subfigure}
+    \hspace{0.02\linewidth}
+    \begin{subfigure}{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{plots/qwen_rr/retrieved_rate_model_comparison/pooled/retrieved_rate_model_comparison_pooled.pdf}
+        \caption{\texttt{qwen2.5}}
+        \label{fig:qwen_rr}
+    \end{subfigure}
+}
+\caption[Retrieval rate comparison across model families]{Retrieved rate over relative depth for each model family, comparing clean (solid) and targeted (dashed) conditions, pooled across languages.}
+\label{fig:rr}
+\end{figure}
