@@ -3,32 +3,30 @@
 This section is structured as follows: first the results are summed up, grouped by research question. Then, in Section~\ref{sec:results_rq1} the results for \textbf{RQ1} is presented in more detail, followed by Section~\ref{sec:results_rq2} for \textbf{RQ2} and Section~\ref{sec:results_rq3} for \textbf{RQ3} respectively.
 
 \begin{description}
-\item[\textbf{RQ1}] Across models, languages, and tokenizers, targeted ablation of a small number of attention heads (5\%) leads to larger performance degradation than random ablation.
-\item[\textbf{RQ2}] Tokenizer choice affects the retrieval performance at retrieval, but with no clear difference in robustness to ablation.
-\item[\textbf{RQ3}] Larger models get better at retrieval and achieve a larger early retrieval peak compared to smaller models.
+\item[\textbf{RQ1}] Across models, languages, and tokenizers, targeted ablation of 5\% attention heads leads to larger performance degradation than random ablation. The effect is smaller for 3\% ablation, and smallest for 1\% ablation.
+\item[\textbf{RQ2}] Tokenizer choice affects the retrieval performance, but with no clear difference in robustness to ablation. 5\% ablation has most impact, with 1\% showing little difference between ablation and control, with differing results for 3\% ablation.
+\item[\textbf{RQ3}] Larger models get better at retrieval and achieve a qualitatively notable early retrieval peak compared to smaller models which show more distributed retrieval patterns. 5\% ablation has most impact compared to control, with differing results for 1/3\% ablation.
 \end{description}
 
 \section{Targeted Ablation}\label{sec:results_rq1}
 
-Targeted ablation leads to worse retrieval than the random ablation in every case except one, where retrieval increases from 0.01 to 0.02 in Turkish for the \texttt{ByT5} model. The largest drop occurs for the \texttt{qwen2.5-7B} model in English, where performance drops from 0.79 to 0.01, while the random ablation only drops from 0.79 to 0.78. With the exception of the \texttt{ByT5}/Turkish example already presented, none of the models are able to compensate for the ablation at a later stage. The final layer results for the \texttt{Toksuite} models is presented in Table~\ref{tab:toksuite_summary}, \texttt{qwen2.5} models in Table~\ref{tab:qwen_layerwise_summary}.
+Targeted ablation leads to worse or identical retrieval than the random ablation in every case except two, where retrieval increases from 0.01 to 0.02 in Turkish for the \texttt{byt5} model under 5\% ablation, and the \texttt{aya} model under 1\%. The largest drop occurs for the \texttt{qwen2.5} 7B model in English, where performance drops from 0.79 to 0.01, while the random ablation only drops from 0.79 to 0.78. With the exception of the \texttt{byt5}/Turkish and \texttt{aya}/English example already presented, none of the models are able to compensate for the ablation at a later stage. The final layer results for the Toksuite models is presented in Table~\ref{tab:toksuite_summary}, \texttt{qwen2.5} models in Table~\ref{tab:qwen_layerwise_summary}.
 
 \input{tab/toksuite_summary.tex}
 \input{tab/qwen_summary.tex}
 
-\section{\texttt{Toksuite} --- Tokenizer \& Language}\label{sec:results_rq2}
+\section{Toksuite --- Tokenizer \& Language}\label{sec:results_rq2}
 
-For the \texttt{Toksuite} models, the magnitude of targeted ablation depends by the language and tokenizer. The strongest effect is observed for English with
-the XGLM tokenizer, where cumulative retrieval drops from $\sim 0.7$ to $\sim 0.15$ for the first 25\% of layers. Although performance partially recovers in later layers, it remains 0.3 below the clean baseline at the final layer. In contrast, targeted ablation has minimal effect in Chinese for certain tokenizers. For the \texttt{ByT5} tokenizer, no additional degradation is observed under targeted ablation, and in one case leads to an \textit{improvement} by 0.01. Similarly, the \texttt{gpt2} tokenizer shows only a small drop (0.04) in Chinese, less than other tokenizer/language combinations.
+For the Toksuite models, the magnitude of targeted ablation depends by the language and tokenizer. The strongest effect is observed for English with
+the \texttt{xglm} tokenizer, where cumulative retrieval drops from $\sim 0.7$ to $\sim 0.15$ for the first 25\% of layers under 5\% ablation. Although performance partially recovers in later layers, it remains 0.38 below the clean baseline at the final layer. In contrast, targeted ablation has minimal effect in Chinese for certain tokenizers. For the \texttt{byt5} tokenizer, no additional degradation is observed under targeted ablation, and in some cases leading to \textit{improvements}. Similarly, the \texttt{gpt2} tokenizer shows only a small drop (0.04) in Chinese under 5\% ablation, less than other tokenizer/language combinations.
 
-Averaged across \texttt{Toksuite} models, retrieval performance is highest for English, lower for Turkish, and lowest for Chinese. In Chinese, most tokenizers perform similarly, with the exception of \texttt{ByT5}, which deviates from this trend. Figure~\ref{fig:toksuite_stacked} presents the cumulative retrieval for each tokenizer, pooled across languages. Figure\ref{fig:rr} shows the retrieval rate per layer for each tokenizer and condition.
-
-\input{fig/qwen_stacked.tex}
-\input{fig/toksuite_stacked.tex}
-
-\section{\texttt{Qwen2.5} --- Parameter Size}\label{sec:results_rq3}
-
-The \texttt{Qwen2.5} models exhibit a qualitatively different pattern. Here, targeted ablation is catastrophic: cumulative retrieval is nearly eliminated across all configurations, with final retrieval not exceeding 0.09. For instance, in the 7B model, retrieval drops from 0.79 to 0.01 under targeted ablation. Random ablation has a larger effect in these models than in \texttt{Toksuite}, but remains weaker than targeted ablation. The highest random ablation impact is for the 1.5B model (English), where random ablation reduces retrieval by 0.26 as compared to a 0.69 reduction under targeted ablation. Across all \texttt{Qwen2.5} models, English consistently outperforms Turkish and Chinese, which show similar performance levels. The largest model has the best retrieval of the tested sizes, although the 1.5B outperforms the 3B in all languages except Turkish.
-
-Layerwise analysis reveals that the 7B and 3B models exhibit early peaks in retrieval rate, while the 1.5B model distributes retrieval more evenly across layers. The pooled layerwise analysis is available in Figure~\ref{fig:qwen_stacked}. The 0.5B model shows neither strong retrieval nor a clear peak. Retrieval rate curves are shown in Figure~\ref{fig:rr}.
+Averaged across Toksuite models, retrieval performance is highest for English, lower for Turkish, and lowest for Chinese. In Chinese, most tokenizers perform similarly, with the exception of \texttt{byt5}, which deviates from this trend. Figure~\ref{fig:toksuite_stacked} presents the cumulative retrieval for each tokenizer under each ablation level, pooled across languages. Figure\ref{fig:rr} shows the retrieval rate per layer for each tokenizer and condition.
 
 \input{fig/rr.tex}
+\input{fig/stacked.tex}
+
+\section{\texttt{qwen2.5} --- Parameter Size}\label{sec:results_rq3}
+
+The \texttt{qwen2.5} models exhibit a qualitatively different pattern. Here, targeted ablation is catastrophic for 5\% ablation: cumulative retrieval is nearly eliminated across all configurations. For instance, in the 7B model, retrieval drops from 0.79 to 0.01 under targeted ablation under 5\% ablation. Random ablation has a larger effect in these models than in Toksuite, but remains weaker than targeted ablation. The highest random ablation impact is for 3\% ablation 7B/English, where random ablation reduces retrieval by 0.51 as compared to a 0.71 reduction under targeted ablation. Across all \texttt{qwen2.5} models, English consistently outperforms Turkish and Chinese, which show similar performance levels. The largest model has the best retrieval of the tested sizes, although the 1.5B outperforms the 3B in all languages except Turkish.
+
+Layerwise analysis reveals that the 7B and 3B models exhibit early peaks in retrieval rate, while the 1.5B model distributes retrieval more evenly across layers. The pooled layerwise analysis is available in Figure~\ref{fig:qwen_stacked}. The 0.5B model shows neither strong retrieval nor a clear peak. Retrieval rate curves are shown in Figure~\ref{fig:rr}.

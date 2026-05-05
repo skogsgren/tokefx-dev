@@ -1,17 +1,19 @@
 \begin{table}[ht]
 \small
 \centering
-\begin{tabular}{lccc}
+\begin{tabular}{l c ccc}
 \toprule
-\textbf{Tokenizer} & \textbf{English} & \textbf{Turkish} & \textbf{Chinese} \\
+& & \multicolumn{3}{c}{\textbf{BPT Score}} \\
+\cmidrule(lr){3-5}
+\textbf{Tokenizer} & \textbf{Vocab size} & \textbf{English} & \textbf{Turkish} & \textbf{Chinese} \\
 \midrule
-\texttt{aya-expanse-8b} & 4.68 & 4.35 & 4.05 \\
-\texttt{byt5-small}     & 1.00 & 1.00 & 1.00 \\
-\texttt{xglm-564M}      & 4.59 & 4.47 & 3.38 \\
-\texttt{gpt2}           & 4.63 & 2.30 & 1.36 \\
-\texttt{Qwen2.5}        & 4.52 & 3.17 & 3.67 \\
+\texttt{aya} & 255k & 4.68 & 4.35 & 4.05 \\
+\texttt{byt5} & 256 & 1.00 & 1.00 & 1.00 \\
+\texttt{gpt2} & 50k & 4.63 & 2.30 & 1.36 \\
+\texttt{qwen2.5} & 151k & 4.52 & 3.17 & 3.67 \\
+\texttt{xglm} & 256k & 4.59 & 4.47 & 3.38 \\
 \bottomrule
 \end{tabular}
-\caption[Byte/token scores over UD-PUD]{Byte/token scores (BPT) over UD-PUD. Higher score indicates better per-byte compression.}
+\caption[Tokenizer statistics over UD-PUD]{Tokenizer statistics over UD-PUD: vocabulary size and byte/token (BPT) scores for English, Turkish, and Chinese. Higher BPT indicates better per-byte compression.}
 \label{tab:fertility}
 \end{table}

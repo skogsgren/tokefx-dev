@@ -40,9 +40,9 @@ S_{l,h} = z^{(\text{attn})}_{l,h} + z^{(\text{norm})}_{l,h}
 
 \section{Ablation}\label{sec:ablation}
 
-We evaluate these patterns using the \texttt{TokSuite} models \citep{altintas2025}, a family of 1B Llama-2–style models trained on the same amount of tokens across five languages: 40B tokens for English and 15B tokens each for Turkish, Chinese, Italian, and Farsi. The models share architecture and data distribution, differing only in tokenizer and effective training volume in bytes, since token counts are not directly comparable across tokenizers. To probe tokenizer effects, we select representative designs: the GPT-2 tokenizer \citep{radford2019} (English-centric BPE), the Aya tokenizer \citep{aya} (multilingual BPE), the XGLM-564M tokenizer \citep{xglm} (Unigram with byte fallback), and the ByT5 tokenizer \citep{xue2022} (byte-level). To examine scaling, we also analyze Qwen2.5 models \citep{qwen2.5, qwen2}, spanning 0.5B to 7B parameters across 29 languages\footnote{The exact training data composition is not publicly available.}.
+We evaluate these patterns using the TokSuite models \citep{altintas2025}, a family of 1B Llama-2–style models trained on the same amount of tokens across five languages: 40B tokens for English and 15B tokens each for Turkish, Chinese, Italian, and Farsi. The models share architecture and data distribution, differing only in tokenizer and effective training volume in bytes, since token counts are not directly comparable across tokenizers. To probe tokenizer effects, we select representative designs: the GPT-2 tokenizer \citep{radford2019} (English-centric BPE), the Aya tokenizer \citep{aya} (large vocab, multilingual BPE), the XGLM-564M tokenizer \citep{xglm} (Unigram with byte fallback), and the ByT5 tokenizer \citep{xue2022} (byte-level). To examine scaling, we also analyze Qwen2.5 models \citep{qwen2.5, qwen2}, spanning 0.5B to 7B parameters across 29 languages\footnote{The exact training data composition is not publicly available.}. In the rest of the text, the models will be refered to by their shorthand; e.g.\ ``Toksuite model with XGLM-564M tokenizer'' $\rightarrow$ \texttt{xglm} for brevity.
 
-We report bytes per token (BPT), $BPT = \frac{\text{tokens}}{\text{bytes}}$, in Table~\ref{tab:fertility} to capture differences in compression.
+We report bytes per token (BPT), $BPT = \frac{\text{tokens}}{\text{bytes}}$, along with vocabulary size, in Table~\ref{tab:fertility} to capture tokenizer differences.
 
 \input{tab/fertility.tex}
 
@@ -55,7 +55,7 @@ We evaluate three conditions:
 \begin{enumerate}
 \tightlist
 \item No ablation
-\item Targeted ablation removing the top 5\% highest-scoring attention heads (Equation~\ref{eq:headscore}
+\item Targeted ablation removing the top 1,3,5\% highest-scoring attention heads (Equation~\ref{eq:headscore}
 \item Random ablation of \textbf{an equal number} of heads from the same layers as the targeted ablation.
 \end{enumerate}
 
