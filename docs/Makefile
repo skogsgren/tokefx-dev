@@ -1,66 +1,61 @@
-# /docs/Makefile
 SHELL := /bin/bash
 OUT := build
 
-.PHONY: all thesis proposal methodology clean article
+.PHONY: all clean thesis proposal methodology article results
 
-all: thesis proposal methodology article
+all: thesis proposal methodology article results
+
+COMMON := references.bib acl_natbib.bst acl.sty
+
+define build
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d)"; \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	mkdir -p "$(OUT)"; \
+	cp $(COMMON) "$$tmp/" 2>/dev/null || true; \
+	cp -a $(1)/. "$$tmp/"; \
+	if [[ -n "$(3)" ]]; then $(3) "$$tmp"; fi; \
+	(cd "$$tmp" && $(2)); \
+	for pair in $(4); do \
+		src="$${pair%%:*}"; \
+		dst="$${pair##*:}"; \
+		cp "$$tmp/$$src" "$(OUT)/$$dst"; \
+	done
+endef
 
 thesis:
-	@set -euo pipefail; \
-	tmp="$$(mktemp -d)"; \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	mkdir -p "$(OUT)"; \
-	cp references.bib "$$tmp/"; \
-	cp acl_natbib.bst "$$tmp/"; \
-	cp -a thesis/. "$$tmp/"; \
-	(cd "$$tmp" && tectonic main.tex); \
-	cp "$$tmp/main.pdf" "$(OUT)/thesis.pdf"
+	$(call build,\
+		thesis,\
+		tectonic main.tex,\
+		./scripts/build_plots,\
+		main.pdf:thesis.pdf)
 
 proposal:
-	@set -euo pipefail; \
-	tmp="$$(mktemp -d)"; \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	mkdir -p "$(OUT)"; \
-	cp references.bib "$$tmp/"; \
-	cp -a proposal/. "$$tmp/"; \
-	(cd "$$tmp" && tectonic main.tex); \
-	(cd "$$tmp" && tectonic slides.tex); \
-	cp "$$tmp/main.pdf" "$(OUT)/proposal.pdf"; \
-	cp "$$tmp/slides.pdf" "$(OUT)/proposal_slides.pdf"
+	$(call build,\
+		proposal,\
+		tectonic main.tex && tectonic slides.tex,\
+		,\
+		main.pdf:proposal.pdf slides.pdf:proposal_slides.pdf)
 
 methodology:
-	@set -euo pipefail; \
-	tmp="$$(mktemp -d)"; \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	mkdir -p "$(OUT)"; \
-	cp references.bib "$$tmp/"; \
-	cp -a update_methodology/. "$$tmp/"; \
-	(cd "$$tmp" && tectonic slides.tex); \
-	cp "$$tmp/slides.pdf" "$(OUT)/methodology.pdf"
+	$(call build,\
+		update_methodology,\
+		tectonic slides.tex,\
+		,\
+		slides.pdf:methodology.pdf)
 
 article:
-	@set -euo pipefail; \
-	tmp="$$(mktemp -d)"; \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	mkdir -p "$(OUT)"; \
-	cp references.bib "$$tmp/"; \
-	cp acl_natbib.bst "$$tmp/"; \
-	cp acl.sty "$$tmp/"; \
-	cp -a article/. "$$tmp/"; \
-	(cd "$$tmp" && tectonic acl_latex.tex); \
-	cp "$$tmp/acl_latex.pdf" "$(OUT)/article.pdf"
+	$(call build,\
+		article,\
+		tectonic acl_latex.tex,\
+		,\
+		acl_latex.pdf:article.pdf)
 
 results:
-	@set -euo pipefail; \
-	tmp="$$(mktemp -d)"; \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	mkdir -p "$(OUT)"; \
-	cp references.bib "$$tmp/"; \
-	cp -a update_results/. "$$tmp/"; \
-	(cd "$$tmp" && tectonic slides.tex); \
-	cp "$$tmp/slides.pdf" "$(OUT)/results.pdf"
-
-
+	$(call build,\
+		update_results,\
+		tectonic slides.tex,\
+		,\
+		slides.pdf:results.pdf)
 clean:
 	@rm -rf "$(OUT)"

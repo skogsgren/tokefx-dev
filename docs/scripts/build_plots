@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+INP="$SCRIPT_DIR"/../../out
+OUT="$1"
+
+mkdir -p "$OUT"
+
+python3 "$SCRIPT_DIR"/heatmap.py \
+    --input "$INP"/toksuite_005/full_attn_heads_all.parquet \
+    --model toksuite/gpt2 \
+    --max_layer 10 \
+    --output "$OUT"/plots \
+    --format pdf \
+    --no_stats
+
+declare -A mappings=( ["CohereLabs-aya-expanse-8b"]="aya" ["facebook-xglm-564M"]="xglm" ["google-byt5-small"]="byt5" )
+
+for model in "toksuite" "qwen"; do
+    python3 "$SCRIPT_DIR"/stacked.py \
+        --abl 0.01 "$INP"/"$model"_001/patchscopes_all_attention_mass.parquet \
+        --abl 0.03 "$INP"/"$model"_003/patchscopes_all_attention_mass.parquet \
+        --abl 0.05 "$INP"/"$model"_005/patchscopes_all_attention_mass.parquet \
+        "$OUT"/plots/"$model"/stacked
+
+    mkdir -p "$OUT"/plots/"$model"/rr
+    python3 "$SCRIPT_DIR"/rr.py \
+        "$INP"/"$model"_005/patchscopes_all_attention_mass.parquet \
+        "$OUT"/plots/"$model"/rr
+
+    mkdir -p "$OUT/tab"
+    table_out="$OUT"/tab/"$model"_summary.tex
+    python3 "$SCRIPT_DIR"/table.py \
+        --abl 0.01 "$INP"/"$model"_001/patchscopes_all_attention_mass.parquet \
+        --abl 0.03 "$INP"/"$model"_003/patchscopes_all_attention_mass.parquet \
+        --abl 0.05 "$INP"/"$model"_005/patchscopes_all_attention_mass.parquet \
+        --decimals 2 \
+        --label tab:"$model"_summary \
+        --short_caption "Summary of final-layer retrieval for \\texttt{$model}" \
+        --caption "Summary of final-layer retrieval under increasing ablation strength for \\texttt{$model}. Clean final is the cumulative first-retrieval rate at the final layer. Targeted and random deltas are measured relative to the clean condition. More negative values indicate stronger disruption after all layers have had the opportunity to compensate. Gap 5\\% is the targeted delta minus the random delta at the largest ablation level." \
+        >"$table_out"
+
+    for key in "${!mappings[@]}"; do
+        value="${mappings[$key]}"
+        sed -i "s|$key|$value|g" "$table_out"
+    done
+done

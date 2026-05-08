@@ -1,10 +1,14 @@
 \begin{figure}[ht]
 \centering
 
+\makebox[\linewidth][c]{%
+\begin{minipage}{1.33\linewidth}
+\centering
+
 % Top (Chinese)
-\begin{subfigure}{0.7\linewidth}
+\begin{subfigure}{0.48\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{plots/toksuite_gpt2_heads_deltas/heatmap_score_delta_chinese.pdf}
+    \includegraphics[width=\linewidth]{plots/heatmap_toksuite_gpt2_chinese.pdf}
     \caption{Chinese}
     \label{fig:gpt2_zh}
 \end{subfigure}
@@ -12,20 +16,24 @@
 \vspace{0.5em}
 
 % Bottom row
-\begin{subfigure}{0.45\linewidth}
+\begin{subfigure}{0.48\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{plots/toksuite_gpt2_heads_deltas/heatmap_score_delta_english.pdf}
+    \includegraphics[width=\linewidth]{plots/heatmap_toksuite_gpt2_english.pdf}
     \caption{English}
     \label{fig:gpt2_en}
 \end{subfigure}
 \hfill
-\begin{subfigure}{0.45\linewidth}
+\begin{subfigure}{0.48\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{plots/toksuite_gpt2_heads_deltas/heatmap_score_delta_turkish.pdf}
+    \includegraphics[width=\linewidth]{plots/heatmap_toksuite_gpt2_turkish.pdf}
     \caption{Turkish}
     \label{fig:gpt2_tr}
 \end{subfigure}
 
+\end{minipage}%
+}
+
 \caption[GPT-2 Attention Head Heatmaps]{Heatmaps showing the difference between attention head activations between \texttt{in\_boundary} and \texttt{out\_boundary} conditions for \texttt{toksuite/gpt2} across layers/languages. Only the first ten layers are displayed for clarity.}
 \label{fig:gpt2_heatmaps}
+
 \end{figure}
