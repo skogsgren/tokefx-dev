@@ -31,6 +31,13 @@ for model in "toksuite" "qwen"; do
 
     mkdir -p "$OUT/tab"
     table_out="$OUT"/tab/"$model"_summary.tex
+
+    # since the table should reflect the model family, but on disk the short-shorthand is used
+    if [[ "$model" == "qwen" ]]; then
+        model_name="qwen2.5"
+    else
+        model_name="$model"
+    fi
     python3 "$SCRIPT_DIR"/table.py \
         --abl 0.01 "$INP"/"$model"_001/patchscopes_all_attention_mass.parquet \
         --abl 0.03 "$INP"/"$model"_003/patchscopes_all_attention_mass.parquet \
@@ -38,7 +45,7 @@ for model in "toksuite" "qwen"; do
         --decimals 2 \
         --label tab:"$model"_summary \
         --short_caption "Summary of final-layer retrieval for \\texttt{$model}" \
-        --caption "Summary of final-layer retrieval under increasing ablation strength for \\texttt{$model}. Clean final is the cumulative first-retrieval rate at the final layer. Targeted and random deltas are measured relative to the clean condition. More negative values indicate stronger disruption after all layers have had the opportunity to compensate. Gap 5\\% is the targeted delta minus the random delta at the largest ablation level." \
+        --caption "Summary of final-layer retrieval under increasing ablation strength for \\texttt{$model_name}. Clean final is the cumulative first-retrieval rate at the final layer. Targeted and random deltas are measured relative to the clean condition. More negative values indicate stronger disruption after all layers have had the opportunity to compensate. Gap 5\\% is the targeted delta minus the random delta at the largest ablation level." \
         >"$table_out"
 
     for key in "${!mappings[@]}"; do
