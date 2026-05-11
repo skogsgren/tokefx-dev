@@ -7,14 +7,6 @@ OUT="$1"
 
 mkdir -p "$OUT"
 
-python3 "$SCRIPT_DIR"/heatmap.py \
-    --input "$INP"/toksuite_005/full_attn_heads_all.parquet \
-    --model toksuite/gpt2 \
-    --max_layer 10 \
-    --output "$OUT"/plots \
-    --format pdf \
-    --no_stats
-
 declare -A mappings=( ["CohereLabs-aya-expanse-8b"]="aya" ["facebook-xglm-564M"]="xglm" ["google-byt5-small"]="byt5" )
 
 for model in "toksuite" "qwen"; do
