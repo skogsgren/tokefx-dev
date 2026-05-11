@@ -80,10 +80,6 @@ You can inspect the raw `parquet` file which contains every individual instance 
 
 It contains some nifty optional flags like `--no_layers` if you want to use it to debug token boundaries. See `./debug_parquet -h` for all the options.
 
-## Plots
-
-The actual plotting scripts used for the thesis are available in the [`tokefx/oneoff`](/tokefx/oneoff) folder. Most of them are terrible and shouldn't be touched.
-
 ### ALVIS/SLURM Notes
 
 In the [`/slurm`](/slurm) folder are SLURM scripts to run on your favorite SLURM cluster. They were made with [ALVIS](https://www.c3se.chalmers.se/about/Alvis/) in mind, so details for your local SLURM may vary. For ALVIS the setup is as you suspect, e.g.:
@@ -107,7 +103,7 @@ with slides:
 make -C docs proposal
 ```
 
-Or the entire thesis:
+If you want to compile the entire thesis you need the experiment data (since the plots are generated dynamically) from [GH releases](https://github.com/skogsgren/tokefx-dev/releases/tag/experiments) and unpack it to the git root (so you have e.g. `./tokefx-dev/out`). After that, make sure `pandas`, `matplotlib`, and `numpy` is installed and run:
 
 ```
 make -C docs thesis
