@@ -131,7 +131,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage{subcaption}
-
+\usepackage{titlesec}
 
 \begin{document}
 
@@ -160,12 +160,19 @@
 %\addtocontents{toc}{\bigskip}
 
 \appendix
-\cleardoublepage
-\addtocontents{toc}{\bigskip}
-\addcontentsline{toc}{part}{Appendices}
-% \include{ch/80-consent-form.tex}
+\titleformat{\chapter}[hang]
+  {\normalfont\huge\bfseries}
+  {Appendix~\thechapter~---~}
+  {0em}
+  {}
+
+\titlespacing*{\chapter}
+  {0pt}
+  {-20pt}
+  {20pt}
+
 \include{ch/81-code-and-data.tex}
 \include{ch/82-ai.tex}
-\include{ch/83-zh_layerwise.tex}
+\include{ch/83-langstack.tex}
 
 \end{document}
